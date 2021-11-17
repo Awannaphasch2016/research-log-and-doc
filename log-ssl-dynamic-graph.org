@@ -5879,7 +5879,7 @@ reddit.to_csv(str( base_path / "reddit_with_expert_labels.csv"), index=False)
 - ref
   - https://roamresearch.com/#/app/AdaptiveGraphStucture/page/pfT6XbX8F
 
-** Research Log 1: Get node classification results from the first 10000 instances (edges) of reddit with expert labels.
+** Research Log 1: Get node classification results from the first 10000 instances (edges) of reddit with expert labels using 10 epochs.
 *** Background (information and description of goal)
 - note
   - Why are you doing this? What is the movitation?
@@ -5887,11 +5887,217 @@ reddit.to_csv(str( base_path / "reddit_with_expert_labels.csv"), index=False)
 
 For this experiment I extracts the first 10000 instances from =reddit_with_expert_label.csvs= (created on =Mon Nov 15 15:30:41 2021= in Research Log 1 on [2021-11-15 Mon].)
 
+Then convert the dataset into tgn format =ml_reddit_with_expert_label*=  by running =preprocess_data= on the dataset.
+
 Same configuration setting of default tgn node classification is used on this dataset which set parameters to be the following
 - epoch = 10
-- ~BATCH_SIZE~ = 200
-
-- size of validation is ~BATCH_SIZE~
-- window slide by ~BATCH_SIZE~
+- ~BATCH_SIZE~ = 100
+- =use_validation= is set to False. (this implies that train-test split will be 85-15.)
 - size of initial training set = 6725 instances (which is 1 percent of training set)
 
+*** Experimental apparatus and procedures
+- note
+  - have you provided sufficient detail in your description of experiment and apparatus to allow another person to reproduce your results or track down the source of any problems with the results?
+  - have you included important detail that are not contained within the writeup?
+  - Describe what you have done and how you have done it.
+
+I used the code below to extract =train_loss=, =val_acc=, =test_acc=, and =cm= (confusion matrix) from =tgn/logs/1637162600.6482246.log=.
+
+Note: Code below is not designed to be robust given different log file structure.
+Error: for some reason, =org-babel= doesn't output results via default =:results value=
+Error: I am quite confident that I reshape (conceptually) incorrectly. compare with code for plotting below. (I beleive there I fixed rehape to be conceptually correct.)
+#+BEGIN_SRC python :noeval
+from pathlib import Path
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+import math
+
+log_file = '1637162600.6482246'
+base_path = Path('/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/')
+log_path = str(base_path / f'log/{log_file}.log')
+
+train_loss = []
+val_acc = []
+test_acc = []
+cm = []
+
+BATCH_SIZE = 5000
+i = 1
+
+previous_epoch = None
+epochs = []
+
+with open(log_path, 'r') as f:
+  for i, line in enumerate(f.readlines()): # 9341 lines in total
+    is_epoch_exist = True if 'Epoch' in line else False
+    is_train_loss_exist = True if 'train loss' in line else False
+    is_val_acc_exist = True if 'val acc' in line else False
+    is_test_acc_exist = True if 'test acc' in line else False
+    is_cm_matrix_exist = True if '[' in line else False
+
+    is_epoch_line = True if (is_epoch_exist and is_train_loss_exist) and is_val_acc_exist else False
+
+
+    if is_epoch_line:
+       train_loss_val =  float(line.split("train loss")[1].split(':')[1].split(',')[0].strip(' '))
+       val_acc_val =  float(line.split("val acc")[1].split(':')[1].split(',')[0].strip(' '))
+       epoch = int(line.split('Epoch')[1].split(':')[0].strip(' '))
+       epochs.append(epoch)
+       train_loss.append(train_loss_val)
+       val_acc.append(val_acc_val)
+
+    if is_test_acc_exist:
+      test_acc_val =  float(line.split("test acc")[1].split(':')[1].split(',')[0].strip(' '))
+      test_acc.append(test_acc_val)
+
+    if is_cm_matrix_exist:
+      cm_val = [ int(i) for i in line.strip('=[]\n ').strip(' ').split(' ') if len(i) > 0 ]
+      cm.append(cm_val)
+
+n_epoch = max(epochs) - min(epochs) + 1
+cm = np.array(cm).reshape(n_epoch,-1,4,4)
+train_cm = cm[:,:-1,:,:]
+test_cm = cm[:,-1,:]
+train_loss = np.array(train_loss).reshape(n_epoch,-1)
+test_acc  = np.array(test_acc)
+val_acc  = np.array(val_acc).reshape(n_epoch, -1)
+
+n_row = 4
+n_col = 4
+mean_test_cm = np.zeros((n_row, n_col))
+mean_train_cm = np.zeros((n_row, n_col))
+mean_val_acc = val_acc.mean(axis=0)
+mean_train_cm_across_run = np.zeros((n_row, n_col, train_cm.shape[1]))
+mean_train_cm_across_epoch = np.zeros((n_row, n_col, train_cm.shape[0]))
+
+for i in range(n_row * n_col):
+  x = i % 4
+  y = math.floor(i/4)
+  mean_test_cm[x,y] = test_cm[:, x, y].mean()
+  # mean_train_cm[x,y] = train_cm[,:, x, y].mean() # how to average over run and epoch?
+
+  for ii in range(train_cm.shape[0]):
+    mean_train_cm_across_epoch[x,y,ii] = train_cm[:,ii, x, y].mean()
+
+  mean_train_cm[x,y] = mean_train_cm_across_epoch[x,y,:].mean()
+
+  for jj in range(train_cm.shape[1]):
+    mean_train_cm_across_run[x,y,jj] = train_cm[jj,:,x,y].mean()
+
+  assert (x + (y*4)) == i, f'{(x + (y*4))}, {i}'
+
+
+with open(base_path / "tmp/tmp.txt", 'w') as f:
+  f.write(f'Element wise mean over (same) first epoch of confusion matrix is = \n{mean_train_cm_across_epoch[:,:,0]}' + f'\nElement wise mean over (same) last epoch of confusion matrix is = \n{mean_train_cm_across_epoch[:,:,-1]}')
+
+# with open(base_path / "tmp/tmp.txt", 'r') as f:
+#   for l in f.readlines():
+#     print(l)
+# str(base_path/"tmp/tmp.txt")
+#+END_SRC
+
+result is shown as followed:
+note: because org-babel doesn't output code for some reason, please rerun the code separately and put the output here.
+#+BEGIN_SRC md
+Element wise mean over (same) first epoch of confusion matrix is =
+[[ 45.8   3.5  48.3 146.4]
+ [ 47.9  24.8  52.2 174.1]
+ [ 26.1   0.8  31.4  87.7]
+ [109.3 117.3 129.2 455.2]]
+Element wise mean over (same) last epoch of confusion matrix is =
+[[155.2   0.    0.   88.8]
+ [ 79.1   0.    0.  219.9]
+ [ 24.4   0.    0.  121.6]
+ [ 49.4   0.    0.  761.6]]
+#+END_SRC
+
+Plot train loss of 10 epochs over 10 runs.
+#+BEGIN_SRC python :noeval
+from pathlib import Path
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+import math
+
+log_file = '1637162600.6482246'
+base_path = Path('/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/')
+log_path = str(base_path / f'log/{log_file}.log')
+plot_path = str(base_path / f'plot/{log_file}.png')
+
+train_loss = []
+val_acc = []
+test_acc = []
+cm = []
+
+BATCH_SIZE = 5000
+i = 1
+
+previous_epoch = None
+epochs = []
+
+with open(log_path, 'r') as f:
+  for i, line in enumerate(f.readlines()): # 9341 lines in total
+    is_epoch_exist = True if 'Epoch' in line else False
+    is_train_loss_exist = True if 'train loss' in line else False
+    is_val_acc_exist = True if 'val acc' in line else False
+    is_test_acc_exist = True if 'test acc' in line else False
+    is_cm_matrix_exist = True if '[' in line else False
+
+    is_epoch_line = True if (is_epoch_exist and is_train_loss_exist) and is_val_acc_exist else False
+
+
+    if is_epoch_line:
+       train_loss_val =  float(line.split("train loss")[1].split(':')[1].split(',')[0].strip(' '))
+       val_acc_val =  float(line.split("val acc")[1].split(':')[1].split(',')[0].strip(' '))
+       epoch = int(line.split('Epoch')[1].split(':')[0].strip(' '))
+       epochs.append(epoch)
+       train_loss.append(train_loss_val)
+       val_acc.append(val_acc_val)
+
+    if is_test_acc_exist:
+      test_acc_val =  float(line.split("test acc")[1].split(':')[1].split(',')[0].strip(' '))
+      test_acc.append(test_acc_val)
+
+    if is_cm_matrix_exist:
+      cm_val = [ int(i) for i in line.strip('=[]\n ').strip(' ').split(' ') if len(i) > 0 ]
+      cm.append(cm_val)
+
+n_epoch = max(epochs) - min(epochs) + 1
+cm = np.array(cm).reshape(-1,n_epoch,4,4)
+train_cm = cm[:,:-1,:,:]
+test_cm = cm[:,-1,:]
+train_loss = np.array(train_loss).reshape(-1,n_epoch)
+# train_loss = np.array(train_loss)
+test_acc  = np.array(test_acc)
+val_acc  = np.array(val_acc).reshape(-1,n_epoch)
+
+for i in range(n_epoch):
+  # plt.plot(train_loss[i,:], labels=" {i}")
+  plt.plot(train_loss[i,:], label=f"run = {i}")
+  plt.legend()
+# plt.show()
+plt.savefig(plot_path)
+plot_ath
+#+END_SRC
+
+
+#+attr_latex: :width 300px
+[[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1637162600.6482246.png][plot train loss of 10 epochs over 10 runs.]]
+
+
+** Research Log 2: Get node classification results from the first 10000 instances (edges) of reddit with expert labels using 50 epochs.
+*** Background (information and description of goal)
+- note
+  - Why are you doing this? What is the movitation?
+  - What is your expectation of the results?
+
+For this experiment I extracts the first 10000 instances from =reddit_with_expert_label.csvs= (created on =Mon Nov 15 15:30:41 2021= in Research Log 1 on [2021-11-15 Mon].)
+
+Then convert the dataset into tgn format =ml_reddit_with_expert_label*=  by running =preprocess_data= on the dataset.
+
+Same configuration setting of default tgn node classification is used on this dataset which set parameters to be the following
+- epoch = 50
+- ~BATCH_SIZE~ = 100
+- =use_validation= is set to False. (this implies that train-test split will be 85-15.)
+- size of initial training set = 6725 instances (which is 1 percent of training set)
