@@ -1,0 +1,6 @@
+#+TITLE: report ssl dynamic graph
+
+
+* weekly progress rerport from [2021-10-23 Sat] to [2021-10-25 Mon]
+** Questions
+*** Why performance of tgn is so high given that it uses 1 percent which is training batch around 700 instances to test set of 5000 instances?

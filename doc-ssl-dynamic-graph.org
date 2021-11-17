@@ -1,0 +1,410 @@
+#+TITLE: Doc: Ssl Dynamic Graph
+
+* Current Error + investigation + exploration
+
+** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/utils/utils.py::i = np.searchsorted(self.node_to_edge_timestamps\[src_idx\], cut_time)][max src_idx and len of self.node_to_edge_timestamp doesn't match up. figure out why?]]
+*** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/utils/utils.py::for i, (source_node, timestamp) in enumerate(zip(source_nodes, timestamps)):][max src_idx (source_nodes) are 10112.]]
+*** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/utils/utils.py::print(len(self.node_to_neighbors))][len(self.node_to_neighbors)) = 10095]]
+*** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/utils/utils.py::for neighbors in adj_list:][len adj_list = 10982 (this is slightly off because len of all nodes are 10984.)]]
+*** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/model/tgn.py::assert (source_time_delta >= 0).all().item(), 'last timestamp in which the target node was updated occured before the current timestemp.'][for some reason, source_time_delta < 0?]]
+*** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/train_self_supervised.py::end_train_idx = min(init_train_data, start_train_idx + BATCH_SIZE)][I feel like init_train_data is not implemented to update end_train_idx correctly]]
+
+
+
+*** debugging spot
+[[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/modules/memory_updater.py::print('<<<<<<<')]]
+
+[[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/model/tgn.py::print(self.memory.messages\[0\])]]
+
+** Error
+
+*** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/model/tgn.py::source_time_delta = edge_times - self.memory.last_update\[source_nodes\]][why is timestamp negative?]]
+
+* note
+**  dynamic graph evaluation
+[[pdf:/mnt/c/Users/terng/OneDrive/Documents/Papers/SSL/BENCHMARKING GRAPH NEURAL NETWORKS ON.pdf::5++0.80;;annot-5-17][BENCHMARKING GRAPH NEURAL NETWORKS ON.pdf: Page 5; Quoting: The prediction problem is extremely unbalanced; in every selected network (except for Enron) we see more than 10,000 non- links for every link.]]
+
+[[pdf:/mnt/c/Users/terng/OneDrive/Documents/Papers/SSL/BENCHMARKING GRAPH NEURAL NETWORKS ON.pdf::5++3.27;;annot-5-21][BENCHMARKING GRAPH NEURAL NETWORKS ON.pdf: Page 5; Quoting: We perform a chronological train-validation-test split. The snapshot size and split sizes are shown in Table 1. All models use the same snapshot sizes and the same train-validation-test splits. We report the results of the test results of the best performing (highest mAP) validation run.]]
+
+* ssl dynamic graph research: presentation
+** presentation 1 (10/15/2021)
+*** I use sliding_window_evaluation() with fixed batch size.
+**** important parameters that likely to effect model performnace
+***** for the first window, 70 pecent of training data is used.
+***** window slide over one batch each time.
+***** back propagation is updated every 1 batch
+***** I only perform 1 epoch for each window.
+****** I am uncertain of existing optimal or rule of thumb for setting number of epoch per window.
+
+**** few things to consider when working with tgn
+***** process to update memory and message
+*** Experimental Log:
+**** [[file:log-ssl-dynamic-graph.org::*Research Date: \[2021-10-15 Fri\]][Research Date: [2021-10-15 Fri]​]]
+* tgn
+** pseudocode
+*** tgn pseudocode for sliding window
+****  level 0 contract:
+****  level 1 draft:
+#+BEGIN_SRC python
+for each run:
+    for each sliding window:
+        for each epoch used in sliding window:
+            for each batches in each epoch:
+                for n number of batches to update backpropagation:
+                    ## Training
+                    sample negative edges
+                    train model n number of batches.
+                    use model to predict edges
+
+                update loss function
+                update back propagation to model's parameters.
+                logging performance related information such that it can be visualized
+
+        ## Validation
+        evaluate performance of tgn link prediction on seen and unseen node
+        evaluate performance of tgn link prediction on only unseen node
+        logging performance related information such that it can be visualized
+
+        ## Updating data for next sliding window
+        add validation data to training data for next sliding window
+
+    ## Update average score from each run
+    append performance information from the current run
+    calculate average of the first  runs to the current run.
+#+END_SRC
+****  level 2 scaffold:
+#+BEGIN_SRC python
+
+for i in range(args.n_runs):
+    for ws in list of batches start from 40 percent of dataset.
+
+        ## Updating data for next sliding window
+        update train_data to trian_data[:end_idx] if end_idx is not None
+        update train_data to tgn.train_ngh_finder()
+
+        for epoch in NUM_EPOCH
+            update training_data to tgn neighbour using tgn.set_neighbor_finder()
+
+            for k in range(0, num_batch, args.backprop_every):
+                for j in range(args.backprop_every)
+                    start_idx = starting id of the batch
+                    end_idx = ending id of the batch
+
+                    update slice of source_batch, destination_batch, edge_idx_batch, timestamps_batches from the training_data.
+
+                    sample a batch of negative edges using train_rand_sampler.sample()
+
+                    ## Training
+                    tgn = tgn.train()
+                    pos_prob, neg_prob = tgn.compute_edge_probabilities()
+
+                loss += criterion()
+                loss /= args.backprop_every
+                loss.backward()
+                optimizer.step()
+
+                append model training performance to m_loss
+
+            ## Validation
+            update full_graph data to tgn neighbour using tgn.set_neighbor_finder()
+
+            run eval_edge_prediciont using val_rand_sampler and val_data as params
+            run eval_edge_prediciont using val_rand_sampler and new_node_val_data as params
+
+            logging performance related information such that it can be visualized
+            append model performance on val_data to val_aps
+            append model performance on new_node_val_data to nn_val_aps
+            append average training loss until this epoch.
+
+    ## Update average score from each run
+    append performance information from the current run
+    calculate average of the first  runs to the current run.
+#+END_SRC
+
+#+RESULTS:
+
+****  level 3 architecture:
+[[file:~/org/code/implementation/python3/examples/ml_evaluate_sequence_data_with_sliding_window.py::for i in range(NUM_RUN):][ml_evaluate_sequence_data_with_sliding_window]]
+****  level 4 engineering:
+** command default
+| var                  | description                                            | default          |   |
+| ---------------      | -------------------------------                        | ---------------- |   |
+| node_dim             | dimension of the node embedding                        | 100              |   |
+| time _dim            | dimension of the time embedding                        | 100              |   |
+| embedding module     | type  of embedding module                              | graph_attention  |   |
+| d                    | Dataset name                                           | wikipedia        |   |
+| bs                   | batch size                                             | 200              |   |
+| backprop_every       | every how many batches to backprop                     | 1                |   |
+| aggregator           | type of message aggregator                             | "last"           |   |
+| message function     | types of message function                              | "identity"       |   |
+| memory updater       | type of memory updater                                 | "gru"            |   |
+| use_memory           | whether to augment the model with a node memory        | True             |   |
+| n_degree             | # of temporal neighbor to consider in each conv layer  | 10               |   |
+| memory_update_at_end | update memory at the end or at the start of the batch? | False            |   |
+** command to run program
+#+BEGIN_SRC bash
+python train_self_supervised.py -d reddit --use_memory --prefix tgn-attn-reddit --n_runs 10
+#+END_SRC
+
+#+RESULTS:
+
+prefix = prefix of checkpoint files
+
+** data
+*** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/utils/data_processing.py::def __init__(self, sources, destinations, timestamps, edge_idxs, labels):][Data class]]
+*** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/utils/data_processing.py::train_data = Data(sources\[train_mask\], destinations\[train_mask\], timestamps\[train_mask\],][full_data, train_dat, val_dat, test_data is a instance of Data() class]]
+*** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/train_self_supervised.py::init_train_data = math.ceil(num_instance * 0.01)][set percentage of train dataset to be size of the first train data for window sliding (init_train_data)]]
+*** Reddit data
+**** there are thee version of data that is loaded, =ml_{}.csv=, =ml_{}.npy=, and =ml_{}_node.npy=, see here.
+**** how does the edge embedding obtained from within the initial dataset?
+note:
+data come from JODIE paper which is a representation leaning frameowkr for temporal interaction networks.
+[[https://github.com/srijankr/jodie#:~:text=MOOC-,Dataset%20format,-The%20networks%20are][JODIE dataset format]]
+
+comment:
+in reddit data, each instance or edge are "user who comment on a post" (user - post relationship). Therefore, in this scenario, user and post have no embedding (which is why the code implementation randomly generate new nodes embedding.). Also, edges features can be calculated using LIWC as stated in JODIE paper ([[pdf:/mnt/c/Users/terng/OneDrive/Documents/Papers/SSL/Predicting Dynamic Embedding Trajectory in Temporal INteraction Networks.pdf::6++3.16;;annot-6-13][Predicting Dynamic Embedding Trajeceory in Temporal INteraction Networks.pdf: Page 6; Quoting: convert the text of each post into a feature vector representing their LIWC categories [35].]])
+
+**** data is a bipartite graph.
+
+***** items = nodes
+***** users = bins
+**** "state_label" or column carry binary label where 0 is "user is not banned after the comment" and 1 is "user is banned after the comment"
+
+[[pdf:/mnt/c/Users/terng/OneDrive/Documents/Papers/SSL/Predicting Dynamic Embedding Trajectory in Temporal INteraction Networks.pdf::7++2.97;;annot-7-11][Predicting Dynamic Embedding Trajectory in Temporal INteraction Networks.pdf: Page 7; Quoting: Reddit bans: Reddit post dataset (from Section 4.1) with ground- truth labels of banned users from Reddit This gives 366 true labels among 672,447 interactions (= 0.05%)]]
+**** first row that have "state_label" value = 1 is row 32632th.
+**** lower limit of user nodes overall occurence are 29. items nodes have no lower limit is 1.
+**** data processing
+
+create reddit without feature columns.
+#+BEGIN_SRC bash :dir /mnt/c/Users/terng/OneDrive/Documents/Working/tgn/data
+xsv cat rows -n reddit_only_head_no_feature.csv reddit_no_header_features.csv > reddit_no_features.csv
+#+END_SRC
+
+#+RESULTS:
+
+#+BEGIN_SRC bash :dir /mnt/c/Users/terng/OneDrive/Documents/Working/tgn/data
+head reddit_no_features.csv
+#+END_SRC
+
+#+RESULTS:
+| user_id | item_id | timestamp | state_label |
+|       0 |       0 |       0.0 |           0 |
+|       1 |       1 |      6.32 |           0 |
+|       2 |       2 |     7.026 |           0 |
+|       3 |       2 |    13.599 |           0 |
+|       4 |       3 |    16.811 |           0 |
+|       5 |       4 |    18.043 |           0 |
+|       6 |       5 |     19.55 |           0 |
+|       7 |       6 |    27.476 |           0 |
+|       8 |       2 |     28.95 |           0 |
+
+#+BEGIN_SRC bash :dir /mnt/c/Users/terng/OneDrive/Documents/Working/tgn/data
+xsv cat rows -n reddit_only_head_no_feature.csv reddit_no_header_features.csv > reddit_no_features.csv
+
+ls
+#+END_SRC
+
+#+RESULTS:
+| ml_reddit.csv                   |
+| ml_reddit.npy                   |
+| ml_reddit_node.csv              |
+| ml_reddit_node.npy              |
+| reddit-modified-10000.csv       |
+| reddit-modified.csv             |
+| reddit.csv                      |
+| reddit_10000.csv                |
+| reddit_head.csv                 |
+| reddit_no_features.csv          |
+| reddit_no_header.csv            |
+| reddit_no_header_features.csv   |
+| reddit_only_head_no_feature.csv |
+| tmp.csv                         |
+
+#+BEGIN_SRC bash :dir /mnt/c/Users/terng/OneDrive/Documents/Working/tgn/data
+xsv select 1 reddit_no_features.csv | xsv frequency | head
+#+END_SRC
+
+#+RESULTS:
+| field   | value | count |
+| user_id |   101 |  4690 |
+| user_id |   554 |  4549 |
+| user_id |   119 |  2918 |
+| user_id |   150 |  2881 |
+| user_id |   135 |  2632 |
+| user_id |   529 |  2505 |
+| user_id |   152 |  1786 |
+| user_id |   576 |  1575 |
+| user_id |   128 |  1563 |
+
+#+BEGIN_SRC bash :dir /mnt/c/Users/terng/OneDrive/Documents/Working/tgn/data
+xsv select 2 reddit_no_features.csv | xsv frequency | head
+#+END_SRC
+
+#+RESULTS:
+| field   | value | count |
+| item_id |     2 | 58727 |
+| item_id |     6 | 52003 |
+| item_id |    32 | 44706 |
+| item_id |    31 | 32123 |
+| item_id |    33 | 19027 |
+| item_id |    38 | 13986 |
+| item_id |    19 | 13627 |
+| item_id |    72 | 12237 |
+| item_id |    15 | 11752 |
+
+#+BEGIN_SRC zsh dir: /mnt/c/Users/terng/OneDrive/Documents/Working/tgn/data
+cmd dir
+#+END_SRC
+
+#+RESULTS:
+
+#+BEGIN_SRC zsh dir: /mnt/c/Users/terng/OneDrive/Documents/Working/tgn/data
+cmd dir
+#+END_SRC
+
+#+RESULTS:
+
+#+BEGIN_SRC sh  dir: /mnt/c/Users/terng/OneDrive/Documents/Working/tgn/data
+cmd dir
+#+END_SRC
+
+#+RESULTS:
+
+** training
+*** using raw message store to prevent leakage when during learning via back propagation
+
+in the tgn link-prediction implementation, during prediction, raw memory (memory from previous timestep) of nodes and nodes features from training data are fed to 2 [[*\[\[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/model/tgn.py::def compute_edge_probabilities(self, source_nodes, destination_nodes, negative_nodes, edge_times,\]\[implementation of edges probability prediction\]\] using compute_edge_probabilities][linears to predict link prediction.]]
+
+
+"The complexity in our training strategy relates to the memory-related modules (Message function,
+Message aggregator, and Memory updater) because they do not directly influence the loss and
+therefore do not receive a gradient. To solve this problem, the memory must be updated before
+predicting the batch interactions. However, updating the memory with an interaction eij (t) before
+using the model to predict that same interaction, causes information leakage. To avoid the issue, when
+processing a batch, we update the memory with messages coming from previous batches (which are
+stored in the Raw Message Store), and then predict the interactions. Figure 2 shows the training flow
+for the memory-related modules. Pseudocode for the training procedure is presented in Appendix A.2doing"
+
+*** performance trade-off between speed and update granularity Given that 70 percent of dataset is used for training trade-off between speed and update granularity is set to batch = 200. (see [[*intuition of how memory is used during training][intuition of how memory is used during training]] ) which is calculated to be around 0.04 percent of the training set (200/(680000 * 0.7)) *** intuition of how memory is used during training "While from the perspective of the first interaction in the batch the memory is up-to-date (since it contains information about all previous interactions in the graph), from the perspective of the last interaction in the batch the same memory is out-of-date,since it lacks information about previous interactions in the same batch. "
+** Prediction of Task
+
+*** link prediction (it is implemented in self-supervised learning style where pos and neg edges are sampled; I don't think this is justified to be called self-supervised because it doesn't apply any method stated in [[https://roamresearch.com/#/app/AdaptiveGraphStucture/page/qIjLHRFKZ][self-supervised survey]]. I may misunderstand it, however.)
+*** node classification (only implemented in supervised training. not implemented in self-supervised.)
+
+** (hyper-)parameters config
+*** training set, validation set, test set = 0-70, 70-85, 85-100
+**** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/utils/data_processing.py::val_time, test_time = list(np.quantile(graph_df.ts, \[0.70, 0.85\]))]]
+**** window sliding
+***** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/train_self_supervised.py::BATCH_SIZE = args.bs][BATCH_SIZE = 200 (batch_size is refered to by its original meaning. number of batch are small chunks of instances that must be run together in sequence to improve memory usage and stochastic to model learning]])
+***** init_Train_data = 6725 (0.01 percent of full_data)
+****** (batch, epoch per batch, window sliding size, init_train_data, number of test data)
+******* (200, 5, 6800, 6800, 6800)
+******* (? ,5, 6800, 200, 6800)
+***** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/train_self_supervised.py::init_num_batch = math.ceil((init_train_data)/BATCH_SIZE)][init_num_batch = number of batches that must be run over init_trian_data (init_num_batch * BATCH_SIZE = init_train_data).]]
+** model implementation
+
+*** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/train_self_supervised.py::Test][test unseen nodes]]
+*** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/train_self_supervised.py::if early_stopper.early_stop_check(val_ap):][early stopping]]
+*** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/train_self_supervised.py::Training :DOC:][train self supervised model]]
+*** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/model/tgn.py::def compute_edge_probabilities(self, source_nodes, destination_nodes, negative_nodes, edge_times,][implementation of edges probability prediction]] using compute_edge_probabilities
+
+[[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/utils/utils.py::def forward(self, x1, x2):][This is implementation of prediction head which is implemented with 2 layer of linear transformation.]]
+
+*** masking mechanism
+there are 3 important groups of masks variables to keep in mind:
+1. new_node_mask
+2. train/val/test_mask
+3. edges_contain_new_nodes_mask
+
+**** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/utils/data_processing.py::new_node_val_mask = np.logical_and(val_mask, edge_contains_new_node_mask)][To obtain final new_node/val_test_mask, train/val/test_mask are applied on top of edges_contain_new_nodes_mask which use new_node_mask as filter.]]
+This implies that both side of nodes in a positive edge may have not been seen in training set, hence, this positive edge is not connected to largest component graph. (There may exists more than one disconnect dynamic graph which can connect and detach at anytime.)
+***** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/utils/data_processing.py::train_mask = np.logical_and(timestamps <= val_time, observed_edges_mask)][train/val/test mask are filter by timestamp base on date range.]]
+***** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/utils/data_processing.py::new_test_node_set = set(random.sample(test_node_set, int(0.1 * n_total_unique_nodes)))][new_test_nodes_set mask nodes to not been seen during training data by mask new nodes to be 1 otherwise 0]]
+[[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/utils/data_processing.py::new_node_set = node_set - train_node_set][new nodes sets only contain new nodes (seen nodes are excluded completely)]]
+
+
+*** Sampling mechansim
+**** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/utils/data_processing.py::ADD: randomly generate positive edges.][I added chunk of code to randomly sample  positive edges from given positive edges (To show that model learning adaptive in this case)]]
+**** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/train_self_supervised.py::train_rand_sampler = RandEdgeSampler(train_data.sources, train_data.destinations)][x_rand_sampler is an instance of RandnEdgeSampler which sample negative edges where source and destination nodes are passed from train/full/new_nodes_val/new_nodes_test_data.]]
+**** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/utils/utils.py::dst_index = self.random_state.randint(0, len(self.dst_list), size)][RandEdgeSampler.sample(size) is used to sample negative edges, however, from the implementation, I suspect that the output of "negative edges" may contain positive edges due to random sampling approach that is used]]
+
+[[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/utils/utils.py::self.src_list = np.unique(src_list)][RandEdgeSampler derived unique nodes from src_list and dst_list. This means that passing in src_list and dst_list from full_data, val_data, test_data will sample nodes contains within those x_data set.]]
+
+[[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/train_self_supervised.py::val_rand_sampler = RandEdgeSampler(full_data.sources, full_data.destinations, seed=0)][val/test_rand_sampler may generate both positive and negative edges because source and destination nodes from full_data are passed as parameters]]
+to garauntee that output only contain negative edges, mask should be applied such that no positive and negative edges can be overlapped
+
+the non garauntee behavior can be considered neglectible if ratio of positive edges to negative edges are really really low.
+
+
+*** Embedding approaches
+**** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/model/tgn.py::source_node_embedding, destination_node_embedding, negative_node_embedding = self.compute_temporal_embeddings(][temporal embedding is applied after node embedding.]]
+**** edges are used only to update nodes with MSG function (see paper) which is used to update graph embedding via embedding_module()
+***** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/model/tgn.py::node_embedding = self.embedding_module.compute_embedding(memory=memory,][notice that edges are not passed into compute_embedding() which output node_embedding]]
+***** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/model/tgn.py::unique_sources, source_id_to_messages = self.get_raw_messages(source_nodes,][notice here that edges_times, and edges_idx are passed to get_raw_message(). This is to obtain edges embedding that attached to the selected nodes (both seen and unseen nodes) to its temporal neighbors via temporal edges from the first time step to time step right before the current timestep.]]
+*** Evaluation approaches
+**** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/train_self_supervised.py::train_val_test_evaluation(tgn) # :DOC:][Default train val test split evaluation approach (used in the tgn paper)]]
+there are two ways to test/validate a model:
+
+case 1: first way is to test model performance on nodes that have been seen during the trinaing set only.
+case 2: second way is to test model performance on nodes that have been seen and have not been seen during the training
+
+***** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/train_self_supervised.py::val_ap, val_auc = eval_edge_prediction(model=tgn,][for case 1: val_data is passed to eval_edge_prediction() where val_rand_sampler are used as negative edge sampler]]
+This force negative edges to be drawn from full data
+
+***** ERROR [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/train_self_supervised.py::nn_val_ap, nn_val_auc = eval_edge_prediction(model=tgn,][for case2: similar to case 1 except that nw_node_val_data are passed instead of val_data in case 1.]]
+I suspect that this may contain possible error becuase x_rand_sampler are an instance of RandEdgeSampler which, according to comment, are used to generate sample of negative edges such that in inductive case negatives are sampled only amongst other new nodes, however, we have not seen nn_x_rand_sampler getting called anywhere. (I expected that nn_x_rand_sampler should be passed to eval_edge_prediction in case 2, but x_rand_sampler are passed instead.)
+
+Original code from github also shows the same "mistake." Given level of understand of the code at this point in time, I beleive that nn_x_rand_sampler were meant to be passed to eval_edge_prediction, instead of x_rand_sampler. It can bee seen that nn_x_rand_sampler was passed to evaluate test set. (which aligned with my expectation.)
+
+*** How models find neighbour for each nodes?
+**** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/utils/utils.py::def get_neighbor_finder(data, uniform, max_node_idx=None):][implementation of set_neighbour_finder (no sort function is applied to garuantee order of edges, but edges occurance shoudl stil lbe sorted.)]]
+***** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/model/tgn.py::def set_neighbor_finder(self, neighbor_finder):][set_neighbour_finder are assigned TGN and embedding_model that TGN used]]
+***** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/train_self_supervised.py::Initialize validation and test neighbor finder to retrieve temporal graph][initialize training/validation finder to retrieve temporal graph]]
+***** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/modules/embedding_module.py::neighbors, edge_idxs, edge_times = self.neighbor_finder.get_temporal_neighbor(][NeighbourFinder() class are assigned to tgn, and the class is only call in compute_embedding method in GraphEmbedding() class]]
+***** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/train_self_supervised.py::tgn.set_neighbor_finder(full_ngh_finder)][set nighbor_finder(x_ngh_finder) is set as followed]]
+
+*** how tgn is trained?
+**** VALIDATE [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/train_self_supervised.py::tgn = tgn.train() # :DOC:][I can't find any section of code that implement tgn.train()]]
+what is the side effect of removing this line?
+*** How tgn memory implements?
+**** step by step of how tgn memory functions are called in train_self_supervised.
+***** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/model/tgn.py::if self.use_memory:][tgn initialize memory as followed.]]
+***** if memory_update_at_start is true, update at the begining of the batch otherwise update at the end of the batch
+****** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/model/tgn.py::self.memory.clear_messages(positives)][if memory_update_at_start is true, message in memeory must be remove because we have already updated the memory using them.]]
+
+***** get raw messages for sources and destination
+**** step by step of how memory is computed
+1. tgn.compute_edges_probability
+2. tgn.compute_edges_probability
+3. tgn.compute_embedding
+4. tgn.compute_temporal_embedidng
+5. tgn.update_memory
+6. memory_udpater.update_memory
+
+
+**** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/modules/memory.py::self.memory = nn.Parameter(torch.zeros((self.n_nodes, self.memory_dimension)).to(self.device),][__init_memory__ assign torch of size (number of nodes, memory_dimension) with all 0 at the beginning]]
+**** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/train_self_supervised.py::if USE_MEMORY:][tgn.memory.__init__memory__ is call at the beginning of each epoch]]
+VALIDATE why is __init__memory__ needs to be called every epoch?
+*****  [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/modules/memory.py::self.memory = nn.Parameter(torch.zeros((self.n_nodes, self.memory_dimension)).to(self.device),][tgn.memory.__init__memory__ initialize self.memory, self.last_update, and self.message.]]
+**** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/modules/message_aggregator.py::def aggregate(self, node_ids, messages):][message aggregator only depends on node_idx and messages]]
+**** detaching memory
+***** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/train_self_supervised.py::Detach memory after 'args.backprop_every' number of batches so we don't backpropagate to][memory is detach after 'args.backprop_every' number of batches so we don't backpropagate to the start of time]]
+**** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/train_self_supervised.py::Backup memory at the end of training, so later we can restore it and use it for the][backup memory at the end of training, so later we can restore it and use it for the validation on unseen nodes]]
+**** assertion error
+***** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/modules/memory_updater.py::assert (self.memory.get_last_update(unique_node_ids) <= timestamps).all().item(), "Trying to " \\][there exist at least one node that self.memeory.get_last_update(unique_node_ids <= timestamps)]]
+****
+****
+
+*** how tgn implement temporal embedding
+**** VALIDATE [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/model/tgn.py::if self.memory_update_at_start:][memory_update_at_start is called only in compute_temporal_embeddings]]
+***** I don't fully understand what type of behavior is this condition dictate, but if memory_update_at_start is True, tgn.memory.store_raw_mesasges() are used, otherwise, tgn.update_memory() is used.
+****  [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/model/tgn.py::node_embedding = self.embedding_module.compute_embedding(memory=memory,][time_diffs are passed to temporal embedding function to output node embedding]]
+***** VALIDATE [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/model/tgn.py::Compute differences between the time the memory of a node was last updated,][time_diffs are calculated as followed]]
+I don't fully understand why time_diffs are calculated in this way.
+****** By default,[[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/modules/embedding_module.py::class GraphAttentionEmbedding(GraphEmbedding):][By default, GraphAttentionEmbedding are used to compute node embedding at a given timestep.]]
+*** understand value/states/data structure of parameters being passed to class/method/function
+**** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/evaluation/evaluation.py::pos_prob, neg_prob = model.compute_edge_probabilities(sources_batch, destinations_batch,][positive nodes (source and destination nodes), negative nodes, timestamp, edge_idx are passed to compute_edge_probabilities]]
+**** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/model/tgn.py::source_node_embedding, destination_node_embedding, negative_node_embedding = self.compute_temporal_embeddings(][positive nodes (source and destination nodes), negative nodes, timestamp, edge_idx are passed to compute_temporal_embedding]]
+***** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/model/tgn.py::nodes = np.concatenate(\[source_nodes, destination_nodes, negative_nodes\])][nodes = np.concatenate([source_nodes, desintaion_nodes, negative_nodes])]]
+***** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/model/tgn.py::timestamps = np.concatenate(\[edge_times, edge_times, edge_times\])][timestamps = np.concatenate([edge_Times, edge_times, edge_times])]]
+**** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/utils/utils.py::adj_list\[destination\].append((source, edge_idx, timestamp))][each index of adj_list in get_neighbor_finder() represents  idx of users and items whose element is list of infomation of its neighbors with edge timestamp.]]
