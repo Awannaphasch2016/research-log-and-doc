@@ -5879,7 +5879,7 @@ reddit.to_csv(str( base_path / "reddit_with_expert_labels.csv"), index=False)
 - ref
   - https://roamresearch.com/#/app/AdaptiveGraphStucture/page/pfT6XbX8F
 
-** =REDO: suspect that confusion matrix output is incorrect= Research Log 1: Get node classification results from the first 10000 instances (edges) of reddit with expert labels using 10 epochs.
+** Research Log 1: Get node classification results from the first 10000 instances (edges) of reddit with expert labels using 10 epochs.
 *** Background (information and description of goal)
 - note
   - Why are you doing this? What is the movitation?
@@ -6101,8 +6101,7 @@ plot_path
 #+attr_latex: :width 300px
 [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1637162600.6482246.png][plot train loss of 10 epochs over 10 runs.]]
 
-
-** =REDO: error in confusion matrix is detected.= Research Log 2: Get node classification results from the first 10000 instances (edges) of reddit with expert labels using 50 epochs.
+** Research Log 2: Get node classification results from the first 10000 instances (edges) of reddit with expert labels using 50 epochs.
 *** Background (information and description of goal)
 - note
   - Why are you doing this? What is the movitation?
@@ -6293,7 +6292,10 @@ plt.savefig(plot_path)
 #+attr_latex: :width 300px
 [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1637194729.1918776.png]]
 
-** =REDO: error in confusion matrix is detected.= Research Log 2: Get node classification results from the first 10000 instances (edges) of reddit with expert labels using 500 epochs.
+* Research Date: [2021-11-19 Fri]
+- ref
+  - https://roamresearch.com/#/app/AdaptiveGraphStucture/page/pfT6XbX8F
+** Research Log 3: Get node classification results from the first 10000 instances (edges) of reddit with expert labels using 500 epochs.
 *** Background (information and description of goal)
 - note
   - Why are you doing this? What is the movitation?
