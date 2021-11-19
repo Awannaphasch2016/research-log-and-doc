@@ -408,3 +408,12 @@ I don't fully understand why time_diffs are calculated in this way.
 ***** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/model/tgn.py::nodes = np.concatenate(\[source_nodes, destination_nodes, negative_nodes\])][nodes = np.concatenate([source_nodes, desintaion_nodes, negative_nodes])]]
 ***** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/model/tgn.py::timestamps = np.concatenate(\[edge_times, edge_times, edge_times\])][timestamps = np.concatenate([edge_Times, edge_times, edge_times])]]
 **** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/utils/utils.py::adj_list\[destination\].append((source, edge_idx, timestamp))][each index of adj_list in get_neighbor_finder() represents  idx of users and items whose element is list of infomation of its neighbors with edge timestamp.]]
+*** How does model use data for training and prediction?
+
+**** what does =args.use_validation= do?
+
+During training, if =args.use_validation= is True, the following happens
+- [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/evaluation/eval_node_classification.py::if args.use_validation:][here]] =args.use_validation= is used to apply the early stopping based on validation auc (=val_auc=), and [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/evaluation/eval_node_classification.py::if args.use_validation:][here]] shows that the model is tested on test data (=test_data=)
+
+During data preparation,
+- [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/utils/data_processing.py::train_mask = timestamps <= val_time if use_validation else timestamps <= test_time][here]] if =args.use_validation= is true, split is =70-15-15=, other wise split is =85-15=.
