@@ -410,6 +410,8 @@ I don't fully understand why time_diffs are calculated in this way.
 **** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/utils/utils.py::adj_list\[destination\].append((source, edge_idx, timestamp))][each index of adj_list in get_neighbor_finder() represents  idx of users and items whose element is list of infomation of its neighbors with edge timestamp.]]
 *** How does model use data for training and prediction?
 
+Note: when =85-15= split is used (85 used for training and 15 used for predicting), [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/evaluation/eval_node_classification.py::test_acc = val_accs\[-1\]][here]] show that performance of last epoch run will be reported as final test performance. In contrast to =70-15-15= will use =75-15= to train and test during epoch iteration.
+
 **** what does =args.use_validation= do?
 
 During training, if =args.use_validation= is True, the following happens

@@ -6295,7 +6295,7 @@ plt.savefig(plot_path)
 * Research Date: [2021-11-19 Fri]
 - ref
   - https://roamresearch.com/#/app/AdaptiveGraphStucture/page/pfT6XbX8F
-** Research Log 3: Get node classification results from the first 10000 instances (edges) of reddit with expert labels using 500 epochs.
+** Research Log 1: Get node classification results from the first 10000 instances (edges) of reddit with expert labels using 500 epochs.
 *** Background (information and description of goal)
 - note
   - Why are you doing this? What is the movitation?
@@ -6478,3 +6478,435 @@ for i in range(n_runs):
 plt.savefig(plot_path)
 # plot_path
 #+END_SRC
+* Research Date: [2021-11-22 Mon]
+- ref
+  - https://roamresearch.com/#/app/AdaptiveGraphStucture/page/pfT6XbX8F
+** =IMPLEMENTATION CAUSES DATA LEAK= +Research Log 1: obtain node classification performance using sliding window evaluation approach.+
+*** Background (information and description of goal)
+- note
+  - Why are you doing this? What is the movitation?
+  - What is your expectation of the results?
+
+predict next window and predicted instances will be added to the data training of the next window.
+Parameters configuration are as followed.
+
+- epoch = 10
+- ~BATCH_SIZE~ = 5000
+- size of validation is ~BATCH_SIZE~
+- window slide by ~BATCH_SIZE~
+- size of initial training set to =BATCH_SIZE=
+
+*** Experimental apparatus and procedures
+- note
+  - have you provided sufficient detail in your description of experiment and apparatus to allow another person to reproduce your results or track down the source of any problems with the results?
+  - have you included important detail that are not contained within the writeup?
+  - Describe what you have done and how you have done it.
+
+plot accuracy and loss over step.
+#+BEGIN_SRC python :noeval
+from pathlib import Path
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+import math
+
+log_file = '1637548846.1373804'
+# log_file = '1637162600.6482246'
+base_path = Path('/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/')
+plot_path = base_path / "plot/"
+log_path = str(base_path / f'log/{log_file}.log')
+
+train_loss = []
+val_auc = []
+test_acc = []
+cm = []
+ws = []
+time_list = []
+
+BATCH_SIZE = 5000
+i = 1
+
+previous_epoch = None
+epochs = []
+
+with open(log_path, 'r') as f:
+  for i, line in enumerate(f.readlines()): # 9341 lines in total
+    is_epoch_exist = True if '--epoch' in line else False
+    is_train_loss_exist = True if 'loss' in line else False
+    is_val_auc_exist = True if 'val auc' in line else False
+    is_cm_matrix_exist = True if '[' in line else False
+    is_ws_exist = True if '-ws' in line else False
+    is_time_exist = True if 'took' in line else False
+
+    # 2021-11-21 18:49:41,876 - root - INFO - epoch: 9 took 16.97s
+    if is_time_exist:
+      time_val = float(line.split('took')[1].split('s')[0].strip(' \n'))
+      time_list.append(time_val)
+
+    if is_ws_exist:
+       ws_val = int(line.split('-ws')[-1].strip('= \n'))
+       ws.append(ws_val)
+
+    if is_epoch_exist:
+       epoch = int(line.split('epoch')[1].split(':')[0].strip(' \n='))
+       epochs.append(epoch)
+
+    if is_train_loss_exist:
+       train_loss_val =  float(line.split("Epoch mean loss")[1].split(':')[1].split(',')[0].strip(' '))
+       train_loss.append(train_loss_val)
+
+
+       # 2021-11-21 16:59:20,137 - root - INFO - val auc: (None, 0.61, array([[ 0,  0, 39,  0],
+
+    if is_val_auc_exist:
+       val_auc_val =  float(line.split("val auc")[1].split(':')[1].split(',')[1].strip(' '))
+       cm_val =  [int(i.strip(' ')) for i in line.split("val auc")[1].split(':')[1].split('[')[-1].split(']')[-2].strip(' ').split(',') ]
+       val_auc.append(val_auc_val)
+       cm.append(cm_val)
+
+    if is_cm_matrix_exist and not is_val_auc_exist:
+      cm_val = [int(i.strip(' ')) for i in line.strip('[]),\n ').strip(' ').split(',')]
+      cm.append(cm_val)
+
+n_epoch = max(epochs) - min(epochs) + 1
+n_ws = max(ws)
+
+assert max(ws) == len(ws) - 1 # to test only the first run.
+
+
+# cm = np.array(cm).reshape(-1,4,4)
+# assert (n_ws_with_all_epoch % n_epoch) == 0
+# cm = cm.reshape(-1, n_epoch,4,4)
+
+train_loss = np.array(train_loss)
+n_ws_with_all_epoch = train_loss.shape[0] - (train_loss.shape[0] % n_epoch)
+train_loss = train_loss[:n_ws_with_all_epoch]
+time_list = time_list[:n_ws_with_all_epoch]
+time_list = np.array(time_list).reshape(-1, n_epoch)
+
+val_auc = np.array(val_auc)
+val_auc = val_auc[:n_ws_with_all_epoch]
+
+title = 'loss and accuracy'
+plt.plot(train_loss, label = 'loss')
+plt.plot(val_auc, label = 'accuracy')
+plt.xlabel('step')
+plt.title(title)
+plt.legend()
+# plt.show()
+plt.savefig(plot_path/ f"{log_file}_{title}.png")
+#+END_SRC
+
+Code above output the following plot
+#+attr_latex: :width 300px
+[[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1637548846.1373804_loss and accuracy.png][loss and accuracy plot]]
+
+plot performance of =nth epoch of each window=
+#+BEGIN_SRC python :noeval
+from pathlib import Path
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+import math
+
+log_file = '1637548846.1373804'
+# log_file = '1637162600.6482246'
+base_path = Path('/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/')
+plot_path = base_path / "plot/"
+log_path = str(base_path / f'log/{log_file}.log')
+
+train_loss = []
+val_auc = []
+test_acc = []
+cm = []
+ws = []
+time_list = []
+
+BATCH_SIZE = 5000
+i = 1
+
+previous_epoch = None
+epochs = []
+
+with open(log_path, 'r') as f:
+  for i, line in enumerate(f.readlines()): # 9341 lines in total
+    is_epoch_exist = True if '--epoch' in line else False
+    is_train_loss_exist = True if 'loss' in line else False
+    is_val_auc_exist = True if 'val auc' in line else False
+    is_cm_matrix_exist = True if '[' in line else False
+    is_ws_exist = True if '-ws' in line else False
+    is_time_exist = True if 'took' in line else False
+
+    # 2021-11-21 18:49:41,876 - root - INFO - epoch: 9 took 16.97s
+    if is_time_exist:
+      time_val = float(line.split('took')[1].split('s')[0].strip(' \n'))
+      time_list.append(time_val)
+
+    if is_ws_exist:
+       ws_val = int(line.split('-ws')[-1].strip('= \n'))
+       ws.append(ws_val)
+
+    if is_epoch_exist:
+       epoch = int(line.split('epoch')[1].split(':')[0].strip(' \n='))
+       epochs.append(epoch)
+
+    if is_train_loss_exist:
+       train_loss_val =  float(line.split("Epoch mean loss")[1].split(':')[1].split(',')[0].strip(' '))
+       train_loss.append(train_loss_val)
+
+
+       # 2021-11-21 16:59:20,137 - root - INFO - val auc: (None, 0.61, array([[ 0,  0, 39,  0],
+
+    if is_val_auc_exist:
+       val_auc_val =  float(line.split("val auc")[1].split(':')[1].split(',')[1].strip(' '))
+       cm_val =  [int(i.strip(' ')) for i in line.split("val auc")[1].split(':')[1].split('[')[-1].split(']')[-2].strip(' ').split(',') ]
+       val_auc.append(val_auc_val)
+       cm.append(cm_val)
+
+    if is_cm_matrix_exist and not is_val_auc_exist:
+      cm_val = [int(i.strip(' ')) for i in line.strip('[]),\n ').strip(' ').split(',')]
+      cm.append(cm_val)
+
+n_epoch = max(epochs) - min(epochs) + 1
+n_ws = max(ws)
+
+assert max(ws) == len(ws) - 1 # to test only the first run.
+
+
+# cm = np.array(cm).reshape(-1,4,4)
+# assert (n_ws_with_all_epoch % n_epoch) == 0
+# cm = cm.reshape(-1, n_epoch,4,4)
+
+train_loss = np.array(train_loss)
+n_ws_with_all_epoch = train_loss.shape[0] - (train_loss.shape[0] % n_epoch)
+train_loss = train_loss[:n_ws_with_all_epoch]
+time_list = time_list[:n_ws_with_all_epoch]
+time_list = np.array(time_list).reshape(-1, n_epoch)
+
+val_auc = np.array(val_auc)
+val_auc = val_auc[:n_ws_with_all_epoch]
+
+title = 'nth epoch of each window'
+train_loss = train_loss.reshape(-1,n_epoch)
+plt.plot(train_loss[:, 0], label = 'first epoch of each window')
+plt.plot(train_loss[:, -1], label = 'last epoch of each window')
+plt.title(title)
+plt.xlabel('windows')
+plt.legend()
+# plt.show()
+plt.savefig(plot_path/ f"{log_file}_{title}.png")
+#+END_SRC
+
+#+attr_latex: :width 300px
+[[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1637548846.1373804_nth epoch of each window.png][nth epoch of each window]]
+
+plot performance of =all epochs of each window=
+#+BEGIN_SRC python :noeval
+
+from pathlib import Path
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+import math
+
+log_file = '1637548846.1373804'
+# log_file = '1637162600.6482246'
+base_path = Path('/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/')
+plot_path = base_path / "plot/"
+log_path = str(base_path / f'log/{log_file}.log')
+
+train_loss = []
+val_auc = []
+test_acc = []
+cm = []
+ws = []
+time_list = []
+
+BATCH_SIZE = 5000
+i = 1
+
+previous_epoch = None
+epochs = []
+
+with open(log_path, 'r') as f:
+  for i, line in enumerate(f.readlines()): # 9341 lines in total
+    is_epoch_exist = True if '--epoch' in line else False
+    is_train_loss_exist = True if 'loss' in line else False
+    is_val_auc_exist = True if 'val auc' in line else False
+    is_cm_matrix_exist = True if '[' in line else False
+    is_ws_exist = True if '-ws' in line else False
+    is_time_exist = True if 'took' in line else False
+
+    # 2021-11-21 18:49:41,876 - root - INFO - epoch: 9 took 16.97s
+    if is_time_exist:
+      time_val = float(line.split('took')[1].split('s')[0].strip(' \n'))
+      time_list.append(time_val)
+
+    if is_ws_exist:
+       ws_val = int(line.split('-ws')[-1].strip('= \n'))
+       ws.append(ws_val)
+
+    if is_epoch_exist:
+       epoch = int(line.split('epoch')[1].split(':')[0].strip(' \n='))
+       epochs.append(epoch)
+
+    if is_train_loss_exist:
+       train_loss_val =  float(line.split("Epoch mean loss")[1].split(':')[1].split(',')[0].strip(' '))
+       train_loss.append(train_loss_val)
+
+
+       # 2021-11-21 16:59:20,137 - root - INFO - val auc: (None, 0.61, array([[ 0,  0, 39,  0],
+
+    if is_val_auc_exist:
+       val_auc_val =  float(line.split("val auc")[1].split(':')[1].split(',')[1].strip(' '))
+       cm_val =  [int(i.strip(' ')) for i in line.split("val auc")[1].split(':')[1].split('[')[-1].split(']')[-2].strip(' ').split(',') ]
+       val_auc.append(val_auc_val)
+       cm.append(cm_val)
+
+    if is_cm_matrix_exist and not is_val_auc_exist:
+      cm_val = [int(i.strip(' ')) for i in line.strip('[]),\n ').strip(' ').split(',')]
+      cm.append(cm_val)
+
+n_epoch = max(epochs) - min(epochs) + 1
+n_ws = max(ws)
+
+assert max(ws) == len(ws) - 1 # to test only the first run.
+
+
+# cm = np.array(cm).reshape(-1,4,4)
+# assert (n_ws_with_all_epoch % n_epoch) == 0
+# cm = cm.reshape(-1, n_epoch,4,4)
+
+train_loss = np.array(train_loss)
+n_ws_with_all_epoch = train_loss.shape[0] - (train_loss.shape[0] % n_epoch)
+train_loss = train_loss[:n_ws_with_all_epoch]
+time_list = time_list[:n_ws_with_all_epoch]
+time_list = np.array(time_list).reshape(-1, n_epoch)
+
+val_auc = np.array(val_auc)
+val_auc = val_auc[:n_ws_with_all_epoch]
+
+title = 'all epochs of each window'
+train_loss = train_loss.reshape(-1,n_epoch)
+for i in range(train_loss.shape[0]):
+  plt.plot(train_loss[i, :])
+plt.title(title)
+plt.xlabel('epochs')
+# plt.legend()
+# plt.show()
+plt.savefig(plot_path/ f"{log_file}_{title}.png")
+#+END_SRC
+
+#+attr_latex: :width 300px
+[[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1637548846.1373804_all epochs of each window.png][all epoch of each window]]
+
+plot =time taken on each window=
+#+BEGIN_SRC python :noeval
+
+from pathlib import Path
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+import math
+
+log_file = '1637548846.1373804'
+# log_file = '1637162600.6482246'
+base_path = Path('/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/')
+plot_path = base_path / "plot/"
+log_path = str(base_path / f'log/{log_file}.log')
+
+train_loss = []
+val_auc = []
+test_acc = []
+cm = []
+ws = []
+time_list = []
+
+BATCH_SIZE = 5000
+i = 1
+
+previous_epoch = None
+epochs = []
+
+with open(log_path, 'r') as f:
+  for i, line in enumerate(f.readlines()): # 9341 lines in total
+    is_epoch_exist = True if '--epoch' in line else False
+    is_train_loss_exist = True if 'loss' in line else False
+    is_val_auc_exist = True if 'val auc' in line else False
+    is_cm_matrix_exist = True if '[' in line else False
+    is_ws_exist = True if '-ws' in line else False
+    is_time_exist = True if 'took' in line else False
+
+    # 2021-11-21 18:49:41,876 - root - INFO - epoch: 9 took 16.97s
+    if is_time_exist:
+      time_val = float(line.split('took')[1].split('s')[0].strip(' \n'))
+      time_list.append(time_val)
+
+    if is_ws_exist:
+       ws_val = int(line.split('-ws')[-1].strip('= \n'))
+       ws.append(ws_val)
+
+    if is_epoch_exist:
+       epoch = int(line.split('epoch')[1].split(':')[0].strip(' \n='))
+       epochs.append(epoch)
+
+    if is_train_loss_exist:
+       train_loss_val =  float(line.split("Epoch mean loss")[1].split(':')[1].split(',')[0].strip(' '))
+       train_loss.append(train_loss_val)
+
+
+       # 2021-11-21 16:59:20,137 - root - INFO - val auc: (None, 0.61, array([[ 0,  0, 39,  0],
+
+    if is_val_auc_exist:
+       val_auc_val =  float(line.split("val auc")[1].split(':')[1].split(',')[1].strip(' '))
+       cm_val =  [int(i.strip(' ')) for i in line.split("val auc")[1].split(':')[1].split('[')[-1].split(']')[-2].strip(' ').split(',') ]
+       val_auc.append(val_auc_val)
+       cm.append(cm_val)
+
+    if is_cm_matrix_exist and not is_val_auc_exist:
+      cm_val = [int(i.strip(' ')) for i in line.strip('[]),\n ').strip(' ').split(',')]
+      cm.append(cm_val)
+
+n_epoch = max(epochs) - min(epochs) + 1
+n_ws = max(ws)
+
+assert max(ws) == len(ws) - 1 # to test only the first run.
+
+
+# cm = np.array(cm).reshape(-1,4,4)
+# assert (n_ws_with_all_epoch % n_epoch) == 0
+# cm = cm.reshape(-1, n_epoch,4,4)
+
+train_loss = np.array(train_loss)
+n_ws_with_all_epoch = train_loss.shape[0] - (train_loss.shape[0] % n_epoch)
+train_loss = train_loss[:n_ws_with_all_epoch]
+time_list = time_list[:n_ws_with_all_epoch]
+time_list = np.array(time_list).reshape(-1, n_epoch)
+
+val_auc = np.array(val_auc)
+val_auc = val_auc[:n_ws_with_all_epoch]
+
+title = 'time taken on each window'
+plt.plot(time_list.sum(axis=-1))
+plt.title(title)
+plt.xlabel('windows')
+# plt.show()
+plt.savefig(plot_path/ f"{log_file}_{title}.png")
+
+print(f"total seconds taken = {time_list.sum()} seconds")
+print(f"total minutes taken = {time_list.sum()/60} minutes")
+print(f"total hour taken = {time_list.sum()/60/60} hours")
+#+END_SRC
+
+#+attr_latex: :width 300px
+[[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1637548846.1373804_time taken on each window.png][time taken on each window]]
+
+*** Data and Observations
+- note
+  - Does the logbook present the data and observations adequately?
+  - How did you performed validation step as proof of correctness of your work?
+  - Are graphs appropriately labeled and legible?
+I can't draw any conclusion from the results because, in this case, I conceptually incorrectly plan out the sliding window evaluation process.
+
+Note that node labels are not changed over time.
+Given that node labels are not changed, sliding window to predict the next window will leak information of nodes labels.
