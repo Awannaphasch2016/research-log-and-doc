@@ -302,6 +302,24 @@ for the memory-related modules. Pseudocode for the training procedure is present
 ******* (? ,5, 6800, 200, 6800)
 ***** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/train_self_supervised.py::init_num_batch = math.ceil((init_train_data)/BATCH_SIZE)][init_num_batch = number of batches that must be run over init_trian_data (init_num_batch * BATCH_SIZE = init_train_data).]]
 ** model implementation
+*** Models and Modules of tgn projects
+from what I understand, models differ from modules in that module contain models. (module determines how model will be interact with other components in the module)
+
+Note: files in models give me a feeling that it commonly used functions/class were refactored from modules.
+
+There are 3 files in models folder
+- tgn
+- temporal_attention
+- time_encoding
+
+There are 4 files in modules folder
+- message_aggregator
+- memory
+- memory_updater
+- embedding_module
+  =Graph<>Embedding= inherits from =GraphEmbedding= which inherits from =EmeddingModule=
+- message_function
+
 
 *** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/train_self_supervised.py::Test][test unseen nodes]]
 *** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/train_self_supervised.py::if early_stopper.early_stop_check(val_ap):][early stopping]]
@@ -322,7 +340,6 @@ This implies that both side of nodes in a positive edge may have not been seen i
 ***** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/utils/data_processing.py::new_test_node_set = set(random.sample(test_node_set, int(0.1 * n_total_unique_nodes)))][new_test_nodes_set mask nodes to not been seen during training data by mask new nodes to be 1 otherwise 0]]
 [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/utils/data_processing.py::new_node_set = node_set - train_node_set][new nodes sets only contain new nodes (seen nodes are excluded completely)]]
 
-
 *** Sampling mechansim
 **** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/utils/data_processing.py::ADD: randomly generate positive edges.][I added chunk of code to randomly sample  positive edges from given positive edges (To show that model learning adaptive in this case)]]
 **** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/train_self_supervised.py::train_rand_sampler = RandEdgeSampler(train_data.sources, train_data.destinations)][x_rand_sampler is an instance of RandnEdgeSampler which sample negative edges where source and destination nodes are passed from train/full/new_nodes_val/new_nodes_test_data.]]
@@ -334,7 +351,6 @@ This implies that both side of nodes in a positive edge may have not been seen i
 to garauntee that output only contain negative edges, mask should be applied such that no positive and negative edges can be overlapped
 
 the non garauntee behavior can be considered neglectible if ratio of positive edges to negative edges are really really low.
-
 
 *** Embedding approaches
 **** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/model/tgn.py::source_node_embedding, destination_node_embedding, negative_node_embedding = self.compute_temporal_embeddings(][temporal embedding is applied after node embedding.]]
@@ -371,15 +387,13 @@ what is the side effect of removing this line?
 ***** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/model/tgn.py::if self.use_memory:][tgn initialize memory as followed.]]
 ***** if memory_update_at_start is true, update at the begining of the batch otherwise update at the end of the batch
 ****** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/model/tgn.py::self.memory.clear_messages(positives)][if memory_update_at_start is true, message in memeory must be remove because we have already updated the memory using them.]]
-
 ***** get raw messages for sources and destination
 **** step by step of how memory is computed
 1. tgn.compute_edges_probability
-2. tgn.compute_edges_probability
-3. tgn.compute_embedding
-4. tgn.compute_temporal_embedidng
-5. tgn.update_memory
-6. memory_udpater.update_memory
+2. tgn.compute_embedding
+3. tgn.compute_temporal_embedidng
+4. tgn.update_memory
+5. memory_udpater.update_memory
 
 
 **** [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/modules/memory.py::self.memory = nn.Parameter(torch.zeros((self.n_nodes, self.memory_dimension)).to(self.device),][__init_memory__ assign torch of size (number of nodes, memory_dimension) with all 0 at the beginning]]
@@ -396,8 +410,8 @@ VALIDATE why is __init__memory__ needs to be called every epoch?
 ****
 
 *** how tgn implement temporal embedding
-**** VALIDATE [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/model/tgn.py::if self.memory_update_at_start:][memory_update_at_start is called only in compute_temporal_embeddings]]
-***** I don't fully understand what type of behavior is this condition dictate, but if memory_update_at_start is True, tgn.memory.store_raw_mesasges() are used, otherwise, tgn.update_memory() is used.
+****  [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/model/tgn.py::if self.memory_update_at_start:][memory_update_at_start is called only in compute_temporal_embeddings]]
+***** if memory_update_at_start is True, tgn.memory.store_raw_mesasges() are used, otherwise, tgn.update_memory() is used.
 ****  [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/model/tgn.py::node_embedding = self.embedding_module.compute_embedding(memory=memory,][time_diffs are passed to temporal embedding function to output node embedding]]
 ***** VALIDATE [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/model/tgn.py::Compute differences between the time the memory of a node was last updated,][time_diffs are calculated as followed]]
 I don't fully understand why time_diffs are calculated in this way.
