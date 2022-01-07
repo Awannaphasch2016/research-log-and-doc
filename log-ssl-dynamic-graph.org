@@ -7432,7 +7432,7 @@ if __name__ == "__main__":
 for ef_iwf as positive edges weight
 - DONE run 5 times the model with sigmoid ef-iwf loss (set =use_sigmoid_ef_iwf_weight= flag to True) + first 10,000 reddit instances
   - its log file name is =1640813396.4925542=
-- run 5 times the model with ef-iwf loss (set =use_ef_iwf_weight= flag to True) + first 100,000 reddit instances
+- DONE run 5 times the model with ef-iwf loss (set =use_ef_iwf_weight= flag to True) + first 100,000 reddit instances
   - its log file name is =1640814430.1087918=
 
 for negative sampling with nf_iwf
@@ -8341,3 +8341,181 @@ if __name__ == "__main__":
 #+caption: comparing performance on =1640898429.909531= to =1640243549.1885495= (aka original)
 #+attr_latex: :width 300px
 [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1640898429-909531_vs_1640243549-1885495.png][file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1640898429-909531_vs_1640243549-1885495.png]]
+** Research Log 4: experiment to be performed
+*** Background (information and description of goal)
+- note
+  - Why are you doing this? What is the movitation?
+  - What is your expectation of the results?
+
+- DONE run 1 times model with tf as =raw count= on 100,000 reddit instances.
+  - log's name is =1640977751.9673245=.
+- DONE run 1 time original model on 100,000 reddit instances. (=memory_at_end= = False)
+  - log's name is =1641232336.596783=
+
+
+* Research Date: [2022-01-03 Mon]
+- ref
+  - https://roamresearch.com/#/app/AdaptiveGraphStucture/page/pfT6XbX8F
+** Research Log 1: Memory Error occurs after training on around 45800 -46800 reddit instances.
+*** Background (information and description of goal)
+- note
+  - Why are you doing this? What is the movitation?
+  - What is your expectation of the results?
+
+The error is the following.
+#+BEGIN_SRC md
+Traceback (most recent call last):
+  File "train_self_supervised.py", line 251, in <module>
+    logger.info('run = {}'.format(i))
+  File "C:\Users\terng\OneDrive\Documents\Working\tgn\evaluation\evaluation.py", line 567, in sliding_window_evaluation
+    #                 full_data.timestamps[val_mask],
+  File "C:\Users\terng\OneDrive\Documents\Working\tgn\model\tgn.py", line 260, in compute_edge_probabilities
+    source_node_embedding, destination_node_embedding, negative_node_embedding = self.compute_temporal_embeddings(source_nodes, destination_nodes, negative_nodes, edge_times, edge_idxs, n_neighbors=n_neighbors)
+  File "C:\Users\terng\OneDrive\Documents\Working\tgn\model\tgn.py", line 195, in compute_temporal_embeddings
+    assert torch.allclose(memory[positives], self.memory.get_memory(positives), atol=1e-5), \
+AssertionError: Something wrong in how the memory was updated
+#+END_SRC
+
+I have confirmed by looking through these logs.
+
+- 45800 is 229 windows * 200 (window size which happen to be the same as =batch_size= in this case)
+  - log =1640814430.1087918= is the log that this error occurs
+- 46800 is 234 windows * 200 (window size which happen to be hte same as =batch_size= in this case)
+  - log =1640977751.9673245= is the log that this error occurs
+- 240 windows * 200 (window size which happen to be hte same as =batch_size= in this case)
+  - log =1641252200.886314= is the log that this error occurs
+
+I have to write test that would reproduce the error.
+** Research Log 2: experiment to be performed
+*** Background (information and description of goal)
+- note
+  - Why are you doing this? What is the movitation?
+  - What is your expectation of the results?
+
+- DONE run the model with =use_nf_iwf_neg_sampling= flag set to True on 10k reddit instances (using =nf_iwf= with raw count as node frequency; run 1 time)
+  - its log file name is =1641246007.212651=
+- run the model with =use_nf_iwf_neg_sampling= flag set to True on 100k reddit instances (using =nf_iwf= with raw count as node frequency.)
+  - its log file name is =1641252200.886314=
+
+
+* Research Date: [2022-01-04 Tue]
+- ref
+  - https://roamresearch.com/#/app/AdaptiveGraphStucture/page/pfT6XbX8F
+** Research Log 1: summarize performance on the first 10k instance between original and ef-iwf (ef is computed as raw_count)
+*** Data and Observations
+- note
+  - Does the logbook present the data and observations adequately?
+  - How did you performed validation step as proof of correctness of your work?
+  - Are graphs appropriately labeled and legible?
+
+Comparing =1640905537.015449= (ef-iwf where ef is computed as raw count; run 5 times) and =1640243549.1885495= (original tgn with no modification; run 5 times), one can observe that ef-iwf based model performance increase relatively faster than original, but original still performance slightly better by the end of 10k.
+
+Therefore, 10k is not enough training data to compare the two models. This is because training performance of both haven't yet plateau.
+
+** Research Log 2: summarize performance on the first 100k instance between original and ef-iwf (nf is computed as raw_count)
+*** Data and Observations
+- note
+  - Does the logbook present the data and observations adequately?
+  - How did you performed validation step as proof of correctness of your work?
+  - Are graphs appropriately labeled and legible?
+
+Comparing between =1640977751.9673245= (ef-iwf where ef is computed as raw count; the run produced error before running all of the first 100k instances) and =1641232336.596783= (the run produced error efore running all of the first 100k instances.), one can see that ef-iwf model performance increase at faster rate than original model and toward the end ef-iwf performs slightly better.
+
+#+caption =1641232336.596783= - =1640977751.9673245= (aka original - ef-iwf compute as raw count.)
+#+attr_latex: :width 500px
+[[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/comparing_1640977751.9673245_and_1641232336.596783.png][file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/comparing_1640977751.9673245_and_1641232336.596783.png]]
+
+
+** Research Log 3: summarize performance on the first 10k instance between original and negative sampling (nf is computed as raw count.)
+*** Data and Observations
+- note
+  - Does the logbook present the data and observations adequately?
+  - How did you performed validation step as proof of correctness of your work?
+  - Are graphs appropriately labeled and legible?
+
+Comparing =1641246007.212651= (negative sampling using nf-iwf where nf is computed as raw count; run 1 time) and =1640243549.1885495= (original tgn with no modification; run 5 times), one can observe that performance of original is siginicantly better.
+
+#+caption =1640243549.1885495= - =1641246007.212651= (aka original - negative sampling using nf-iwf where nf is computed as raw count)
+#+attr_latex: :width 500px
+[[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/comparing_1640243549.1885495_and_1641246007.212651.png][file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/comparing_1640243549.1885495_and_1641246007.212651.png]]
+
+** Research Log 4: summarize performance on the first 100k instance between original and negative sampling (nf is computed as raw count)
+
+*** Data and Observations
+- note
+  - Does the logbook present the data and observations adequately?
+  - How did you performed validation step as proof of correctness of your work?
+  - Are graphs appropriately labeled and legible?
+
+Comparing between =1641252200.886314= (negative sampling using nf-iwf where nf is raw count; 100k instances) and =1641232336.596783= (original tgn; the run produced error efore running all of the first 100k instances), negative sampling perform significantly worse. and, in contrast to original model, the negative sampling performance deteriorate over time while the original perform better over time.
+
+#+attr_latex: :width 500px
+[[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1641232336.596783_vs_1641252200.886314.png][file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1641232336.596783_vs_1641252200.886314.png]]
+
+** Research Log 5: box plot of negative sampled with nf_iwf (where nf is raw count) of all window of the last window iteration.
+*** Data and Observations
+- note
+  - Does the logbook present the data and observations adequately?
+  - How did you performed validation step as proof of correctness of your work?
+  - Are graphs appropriately labeled and legible?
+
+model number is =1641252200.886314=.
+
+Running boxplot takes too long. (several minutes). This is because there are 7,128,010 line of =log/nodes_and_edges_weight/1641252200.886314= (at the time of the writing.) to parse
+
+#+attr_latex: :width 500px
+[[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/pos_edges_weight_1641252200-886314.png][file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/pos_edges_weight_1641252200-886314.png]]
+
+
+
+* Research Date: [2022-01-05 Wed]
+- ref
+  - https://roamresearch.com/#/app/AdaptiveGraphStucture/page/pfT6XbX8F
+** Research Log 1: experiments to be performed.
+*** Background (information and description of goal)
+- note
+  - Why are you doing this? What is the movitation?
+  - What is your expectation of the results?
+run the following experiment on hpc
+- original + random weight (10k) + batch size = 200 (to be comparable to other model)
+  - its log is =1641413669.884178= (this log is terminated before it complete.)
+  - its log is =1641426436.864333=
+
+
+* Research Date: [2022-01-06 Thu]
+- ref
+  - https://roamresearch.com/#/app/AdaptiveGraphStucture/page/pfT6XbX8F
+** Research Log 1: running hyperameter tuning on hpc.
+*** Background (information and description of goal)
+- note
+  - Why are you doing this? What is the movitation?
+  - What is your expectation of the results?
+
+I am not sure how to select tuning framework that wrap around pytorch model, so I just =ray tune= which is a generalized framework for parameter tuning.
+
+I use tune the following parameters
+- general parameters
+  - =n_epoch=: number of epoch
+  - =batch_size=: size of batch
+  - =window size=: size of window
+- specific to my modified model
+  - negative sample using nf_iwf (where nf is raw count)
+    - =top_k_percent=: only top k percent of user node per each batch will be selected.
+  - expert labeling
+    - =budget=:  percentage of all instances to be labeled.
+     - On each batch, maximum number of instances to be labeled is the following
+       =budget= * =# of unique node on the current batch=
+* Research Date: [2022-01-07 Fri]
+- ref
+  - https://roamresearch.com/#/app/AdaptiveGraphStucture/page/pfT6XbX8F
+** Research Log 1: run model where =weighted_loss_method= is =share_selected_random_weight_per_window=
+*** Data and Observations
+- note
+  - Does the logbook present the data and observations adequately?
+  - How did you performed validation step as proof of correctness of your work?
+  - Are graphs appropriately labeled and legible?
+
+
+Comparing =1640243549.1885495= (original model) to =1641588473.0998917= (model where =weighted_loss_method= is =share_selected_random_weight_per_window=)
+#+attr_latex: :width 500px
+[[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1640243549.1885495_vs_1641588473.0998917.png][file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1640243549.1885495_vs_1641588473.0998917.png]]
