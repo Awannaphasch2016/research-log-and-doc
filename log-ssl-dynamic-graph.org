@@ -8519,3 +8519,13 @@ I use tune the following parameters
 Comparing =1640243549.1885495= (original model) to =1641588473.0998917= (model where =weighted_loss_method= is =share_selected_random_weight_per_window=)
 #+attr_latex: :width 500px
 [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1640243549.1885495_vs_1641588473.0998917.png][file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1640243549.1885495_vs_1641588473.0998917.png]]
+
+** Research Log 1: run model where =weighted_loss_method= is =random_as_pos_edges_weight=
+*** Background (information and description of goal)
+- note
+  - Why are you doing this? What is the movitation?
+  - What is your expectation of the results?
+
+Comparing =1640243549.1885495= (original model) to =1641597198.5721123= (model where =weighted_loss_method= is =share_selected_random_weight_per_window=)
+#+attr_latex: :width 500px
+[[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1640243549.1885495_vs_1641597198.5721123.png][file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1640243549.1885495_vs_1641597198.5721123.png]]
