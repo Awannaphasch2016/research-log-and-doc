@@ -8356,7 +8356,7 @@ if __name__ == "__main__":
 * Research Date: [2022-01-03 Mon]
 - ref
   - https://roamresearch.com/#/app/AdaptiveGraphStucture/page/pfT6XbX8F
-** Research Log 1: Memory Error occurs after training on around 45800 -46800 reddit instances.
+** Research Log 1: Memory Update Error occurs after training on around 45800 -46800 reddit instances.
 *** Background (information and description of goal)
 - note
   - Why are you doing this? What is the movitation?
@@ -8413,6 +8413,7 @@ Comparing =1640905537.015449= (ef-iwf where ef is computed as raw count; run 5 t
 Therefore, 10k is not enough training data to compare the two models. This is because training performance of both haven't yet plateau.
 
 ** Research Log 2: summarize performance on the first 100k instance between original and ef-iwf (nf is computed as raw_count)
+
 *** Data and Observations
 - note
   - Does the logbook present the data and observations adequately?
@@ -8477,7 +8478,7 @@ Running boxplot takes too long. (several minutes). This is because there are 7,1
   - Why are you doing this? What is the movitation?
   - What is your expectation of the results?
 run the following experiment on hpc
-- original + random weight (10k) + batch size = 200 (to be comparable to other model)
+- original + random weight (10k) + batch size = 200 (to be comparable to other model) + random weight range from 0 to 5 (0-5)
   - its log is =1641413669.884178= (this log is terminated before it complete.)
   - its log is =1641426436.864333=
 
@@ -8508,7 +8509,1571 @@ I use tune the following parameters
 * Research Date: [2022-01-07 Fri]
 - ref
   - https://roamresearch.com/#/app/AdaptiveGraphStucture/page/pfT6XbX8F
-** Research Log 1: run model where =weighted_loss_method= is =share_selected_random_weight_per_window=
+** Research Log 1: run model where weighted_loss_method is share_selected_random_weight_per_window (use_random_weight_to_benchmark_ef_iwf_1 flag is set to true)
+*** Data and Observations
+- note
+  - Does the logbook present the data and observations adequately?
+  - How did you performed validation step as proof of correctness of your work?
+  - Are graphs appropriately labeled and legible?
+
+Comparing =1640243549.1885495= (original model) to =1641588473.0998917= (model where =weighted_loss_method= is =share_selected_random_weight_per_window=)
+
+weight is randomly pick from range 0 - 500
+
+#+attr_latex: :width 500px
+[[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1640243549.1885495_vs_1641588473.0998917.png][file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1640243549.1885495_vs_1641588473.0998917.png]]
+
+** Research Log 1: run model where =weighted_loss_method= is =random_as_pos_edges_weight= (=use_random_weight_to_benchmark_ef_iwf= flag is set to true)
+*** Background (information and description of goal)
+- note
+  - Why are you doing this? What is the movitation?
+  - What is your expectation of the results?
+
+Comparing =1640243549.1885495= (original model) to =1641597198.5721123= (model where =weighted_loss_method= is =share_selected_random_weight_per_window=)
+
+weight is randomly pick from range 0 - 500
+
+#+attr_latex: :width 500px
+[[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1640243549.1885495_vs_1641597198.5721123.png][file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1640243549.1885495_vs_1641597198.5721123.png]]
+
+* Research Date: [2022-01-10 Mon]
+- ref
+  - https://roamresearch.com/#/app/AdaptiveGraphStucture/page/pfT6XbX8F
+** Research Log 1: experiments to be performed
+*** Background (information and description of goal)
+- note
+  - Why are you doing this? What is the movitation?
+  - What is your expectation of the results?
+
+note: that at this time, weight range is changed manually.
+
+for node classification, run the following
+- 10k reddit instances
+  - model with =use_random_weight_to_benchmark_nf_iwf= flag is True + weight range is 0 - 500
+    - log file is =1641851230.354585=.
+  - model with =use_random_weight_to_benchmark_nf_iwf_1= flag is True + weight range is 0 - 500
+    - log file is =1641931341.737258=.
+
+for link prediction, run the following
+  - model with =use_random_weight_to_benchmark_ef_iwf_1= flag is True + weight range is 0 - 5
+    - log file is =1641977944.7344809=.
+
+** Research Log 2: run experiment on expert label nodes classification. (randomize node weight is run by setting =use_random_weight_to_benchmark_nf_iwf= flag to true) + random weight range from 0-500 + reddit 10k
+*** Background (information and description of goal)
+- note
+  - Why are you doing this? What is the movitation?
+  - What is your expectation of the results?
+
+the model uses random weight to assign node weight in its loss function + run on 10k reddit instances.
+- randomize node weight is run by setting =use_random_weight_to_benchmark_nf_iwf= to true
+- log file is =1641851230.354585=
+
+** Research Log 2: run experiment on expert label nodes classification. (randomize node weight is run by setting =use_random_weight_to_benchmark_nf_iwf_1= flag to true) + random weight range from 0-500 + reddit 10k
+*** Background (information and description of goal)
+- note
+  - Why are you doing this? What is the movitation?
+  - What is your expectation of the results?
+
+the model uses random weight to assign node weight in its loss function + run on 10k reddit instance.
+- randomize node weight is run by setting =use_random_weight_to_benchmark_nf_iwf_1= to true
+- log file is ==
+
+* Research Date: [2022-01-16 Sun]
+- ref
+  - https://roamresearch.com/#/app/AdaptiveGraphStucture/page/pfT6XbX8F
+** Research Log 1: error occurs when I run ray-tune locally on my laptop
+*** Background (information and description of goal)
+- note
+  - Why are you doing this? What is the movitation?
+  - What is your expectation of the results?
+
+I encounter multiple types of error depend on situation
+
+1. =ray-tune= error when I run =python train_self_supervised.py -d reddit_10000 --use_memory --run_tuning= on anaconda cmd in window os.
+
+#+BEGIN_SRC md
+INFO:first_logger:Namespace(aggregator='last', backprop_every=1, bs=200, data='reddit_10000', different_new_nodes=False, drop_out=0.1, dyrep=False, embedding_module='graph_attention', gpu=0, lr=0.0001, memory_dim=172, memory_update_at_end=False, memory_updater='gru', message_dim=100, message_function='identity', n_degree=10, n_epoch=50, n_gpu=1, n_head=2, n_layer=1, n_runs=1, n_tuning_samples=3, node_dim=100, patience=5, prefix=None, randomize_features=False, run_tuning=True, save_checkpoint=False, time_dim=100, uniform=False, use_destination_embedding_in_message=False, use_ef_iwf_weight=False, use_memory=True, use_nf_iwf_neg_sampling=False, use_random_weight_to_benchmark_ef_iwf=False, use_random_weight_to_benchmark_ef_iwf_1=False, use_sigmoid_ef_iwf_weight=False, use_source_embedding_in_message=False)
+INFO:second_logger:Namespace(aggregator='last', backprop_every=1, bs=200, data='reddit_10000', different_new_nodes=False, drop_out=0.1, dyrep=False, embedding_module='graph_attention', gpu=0, lr=0.0001, memory_dim=172, memory_update_at_end=False, memory_updater='gru', message_dim=100, message_function='identity', n_degree=10, n_epoch=50, n_gpu=1, n_head=2, n_layer=1, n_runs=1, n_tuning_samples=3, node_dim=100, patience=5, prefix=None, randomize_features=False, run_tuning=True, save_checkpoint=False, time_dim=100, uniform=False, use_destination_embedding_in_message=False, use_ef_iwf_weight=False, use_memory=True, use_nf_iwf_neg_sampling=False, use_random_weight_to_benchmark_ef_iwf=False, use_random_weight_to_benchmark_ef_iwf_1=False, use_sigmoid_ef_iwf_weight=False, use_source_embedding_in_message=False)
+The dataset has 10000 interactions, involving 4166 different nodes
+The training dataset has 4928 interactions, involving 2415 different nodes
+The validation dataset has 1500 interactions, involving 1208 different nodes
+The test dataset has 1500 interactions, involving 1214 different nodes
+The new node validation dataset has 1037 interactions, involving 940 different nodes
+The new node test dataset has 1087 interactions, involving 957 different nodes
+416 nodes were used for the inductive testing, i.e. are never seen during training
+INFO:ray.tune.ray_trial_executor:Initializing Ray automatically.For cluster usage or custom Ray initialization, call `ray.init(...)` before `tune.run`.
+2022-01-16 18:22:49,469 INFO services.py:1172 -- View the Ray dashboard at http://127.0.0.1:8265
+2022-01-16 18:23:02,333 WARNING experiment.py:291 -- No name detected on trainable. Using DEFAULT.
+2022-01-16 18:23:02,333 INFO registry.py:64 -- Detected unknown callable for trainable. Converting to class.
+2022-01-16 18:23:04,160 WARNING tune.py:411 -- Tune detects GPUs, but no trials are using GPUs. To enable trials to use GPUs, set tune.run(resources_per_trial={'gpu': 1}...) which allows Tune to expose 1 GPU to each trial. You can also override `Trainable.default_resource_request` if using the Trainable API.
+2022-01-16 18:23:05,595 WARNING worker.py:1107 -- Warning: The actor ImplicitFunc has size 19986469 when pickled. It will be stored in Redis, which could cause memory issues. This may mean that its definition uses a large array or other object.
+2022-01-16 18:23:05,735 ERROR syncer.py:72 -- Log sync requires rsync to be installed.
+== Status ==
+Memory usage on this node: 14.7/15.9 GiB: ***LOW MEMORY*** less than 10% of the memory on this node is available for use. This can cause unexpected crashes. Consider reducing the memory used by your application or reducing the Ray object store size by setting `object_store_memory` when calling `ray.init`.
+Using AsyncHyperBand: num_stopped=0
+Bracket: Iter 32.000: None | Iter 16.000: None | Iter 8.000: None | Iter 4.000: None | Iter 2.000: None | Iter 1.000: None
+Resources requested: 2/12 CPUs, 0/1 GPUs, 0.0/0.98 GiB heap, 0.0/0.34 GiB objects
+Result logdir: C:\Users\terng\ray_results\train_self_supervised
+Number of trials: 1/3 (1 RUNNING)
++---------------------+----------+-------+--------------+-----------+
+| Trial name          | status   | loc   |   batch_size |   n_epoch |
+|---------------------+----------+-------+--------------+-----------|
+| DEFAULT_407be_00000 | RUNNING  |       |         1000 |        50 |
++---------------------+----------+-------+--------------+-----------+
+
+
+2022-01-16 18:23:12,187 ERROR trial_runner.py:616 -- Trial DEFAULT_407be_00001: Error processing event.
+Traceback (most recent call last):
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\tune\trial_runner.py", line 586, in _process_trial
+    results = self.trial_executor.fetch_result(trial)
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\tune\ray_trial_executor.py", line 609, in fetch_result
+    result = ray.get(trial_future[0], timeout=DEFAULT_GET_TIMEOUT)
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\_private\client_mode_hook.py", line 47, in wrapper
+    return func(*args, **kwargs)
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\worker.py", line 1456, in get
+    raise value.as_instanceof_cause()
+ray.exceptions.RayTaskError(AccessDenied): ray::ImplicitFunc.train_buffered() (pid=6160, ip=192.168.1.6)
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\thirdparty_files\psutil\_pswindows.py", line 780, in cmdline
+    ret = cext.proc_cmdline(self.pid, use_peb=True)
+PermissionError: [WinError 5] Access is denied: '(originated from OpenProcess)'
+
+During handling of the above exception, another exception occurred:
+
+ray::ImplicitFunc.train_buffered() (pid=6160, ip=192.168.1.6)
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\thirdparty_files\psutil\_pswindows.py", line 679, in wrapper
+    return fun(self, *args, **kwargs)
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\thirdparty_files\psutil\_pswindows.py", line 695, in wrapper
+    return fun(self, *args, **kwargs)
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\thirdparty_files\psutil\_pswindows.py", line 783, in cmdline
+    ret = cext.proc_cmdline(self.pid, use_peb=False)
+PermissionError: [Errno 13] assume access denied (originated from NtQueryInformationProcess(ProcessBasicInformation) -> STATUS_NOT_FOUND)
+
+During handling of the above exception, another exception occurred:
+
+ray::ImplicitFunc.train_buffered() (pid=6160, ip=192.168.1.6)
+  File "python\ray\_raylet.pyx", line 439, in ray._raylet.execute_task
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\worker.py", line 176, in reraise_actor_init_error
+    raise self.actor_init_error
+  File "python\ray\_raylet.pyx", line 440, in ray._raylet.execute_task
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\memory_monitor.py", line 131, in raise_if_low_memory
+    RayOutOfMemoryError.get_message(used_gb, total_gb,
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\memory_monitor.py", line 43, in get_message
+    proc.cmdline()))
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\thirdparty_files\psutil\__init__.py", line 677, in cmdline
+    return self._proc.cmdline()
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\thirdparty_files\psutil\_pswindows.py", line 681, in wrapper
+    raise convert_oserror(err, pid=self.pid, name=self._name)
+psutil.AccessDenied: psutil.AccessDenied (pid=88)
+Result for DEFAULT_407be_00001:
+  {}
+
+== Status ==
+Memory usage on this node: 15.2/15.9 GiB: ***LOW MEMORY*** less than 10% of the memory on this node is available for use. This can cause unexpected crashes. Consider reducing the memory used by your application or reducing the Ray object store size by setting `object_store_memory` when calling `ray.init`.
+Using AsyncHyperBand: num_stopped=0
+Bracket: Iter 32.000: None | Iter 16.000: None | Iter 8.000: None | Iter 4.000: None | Iter 2.000: None | Iter 1.000: None
+Resources requested: 4/12 CPUs, 0/1 GPUs, 0.0/0.98 GiB heap, 0.0/0.34 GiB objects
+Result logdir: C:\Users\terng\ray_results\train_self_supervised
+Number of trials: 3/3 (1 ERROR, 2 RUNNING)
++---------------------+----------+-------+--------------+-----------+
+| Trial name          | status   | loc   |   batch_size |   n_epoch |
+|---------------------+----------+-------+--------------+-----------|
+| DEFAULT_407be_00000 | RUNNING  |       |         1000 |        50 |
+| DEFAULT_407be_00002 | RUNNING  |       |         5000 |        10 |
+| DEFAULT_407be_00001 | ERROR    |       |          200 |        50 |
++---------------------+----------+-------+--------------+-----------+
+Number of errored trials: 1
++---------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------+
+| Trial name          |   # failures | error file                                                                                                                     |
+|---------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------|
+| DEFAULT_407be_00001 |            1 | C:\Users\terng\ray_results\train_self_supervised\DEFAULT_407be_00001_1_batch_size=200,n_epoch=50_2022-01-16_18-23-06\error.txt |
++---------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------+
+
+(pid=20852)2022-01-16 18:24:17,940      ERROR trial_runner.py:616 -- Trial DEFAULT_407be_00002: Error processing event.
+Traceback (most recent call last):
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\tune\trial_runner.py", line 586, in _process_trial
+    results = self.trial_executor.fetch_result(trial)
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\tune\ray_trial_executor.py", line 609, in fetch_result
+    result = ray.get(trial_future[0], timeout=DEFAULT_GET_TIMEOUT)
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\_private\client_mode_hook.py", line 47, in wrapper
+    return func(*args, **kwargs)
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\worker.py", line 1456, in get
+    raise value.as_instanceof_cause()
+ (pid=26616, ip=192.168.1.6)TuneError): ray::ImplicitFunc.train_buffered() 2022-01-16 18:24:15,412      ERROR function_runner.py:254 -- Runner Thread raised error.
+  File "python\ray\_raylet.pyx", line 480, in ray._raylet.execute_task
+  File "python\ray\_raylet.pyx", line 432, in ray._raylet.execute_task.function_executor
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\function_manager.py", line 556, in actor_method_executor
+    return method(__ray_actor, *args, **kwargs)
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\tune\trainable.py", line 167, in train_buffered
+    result = self.train()
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\tune\trainable.py", line 226, in train
+    result = self.step()
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\tune\function_runner.py", line 366, in step
+    self._report_thread_runner_error(block=True)
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\tune\function_runner.py", line 512, in _report_thread_runner_error
+    raise TuneError(
+ray.tune.error.TuneError: Trial raised an exception. Traceback:
+
+ray::ImplicitFunc.train_buffered() (pid=26616, ip=192.168.1.6)
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\tune\function_runner.py", line 248, in run
+    self._entrypoint()
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\tune\function_runner.py", line 315, in entrypoint
+    return self._trainable_func(self.config, self._status_reporter,
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\tune\function_runner.py", line 576, in _trainable_func
+    output = fn()
+  File "train_self_supervised.py", line 287, in run_model
+    sliding_window_evaluation(tgn,
+  File "C:\Users\terng\OneDrive\Documents\Working\tgn\evaluation\evaluation.py", line 599, in sliding_window_evaluation
+    pos_prob, neg_prob = tgn.compute_edge_probabilities(sources_batch, destinations_batch,
+  File "C:\Users\terng\OneDrive\Documents\Working\tgn\model\tgn.py", line 264, in compute_edge_probabilities
+    source_node_embedding, destination_node_embedding, negative_node_embedding = self.compute_temporal_embeddings(source_nodes, destination_nodes, negative_nodes, edge_times, edge_idxs, n_neighbors=n_neighbors)
+  File "C:\Users\terng\OneDrive\Documents\Working\tgn\model\tgn.py", line 172, in compute_temporal_embeddings
+    node_embedding = self.embedding_module.compute_embedding(memory=memory,
+  File "C:\Users\terng\OneDrive\Documents\Working\tgn\modules\embedding_module.py", line 133, in compute_embedding
+    source_embedding = self.aggregate(n_layers, source_node_features,
+  File "C:\Users\terng\OneDrive\Documents\Working\tgn\modules\embedding_module.py", line 214, in aggregate
+    source_embedding, _ = attention_model(source_node_features,
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\torch\nn\modules\module.py", line 1102, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "C:\Users\terng\OneDrive\Documents\Working\tgn\model\temporal_attention.py", line 70, in forward
+    attn_output, attn_output_weights = self.multi_head_target(query=query, key=key, value=key,
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\torch\nn\modules\module.py", line 1102, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\torch\nn\modules\activation.py", line 992, in forward
+    attn_output, attn_output_weights = F.multi_head_attention_forward(
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\torch\nn\functional.py", line 4997, in multi_head_attention_forward
+    q, k, v = _in_projection(query, key, value, q_proj_weight, k_proj_weight, v_proj_weight, b_q, b_k, b_v)
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\torch\nn\functional.py", line 4806, in _in_projection
+    return linear(q, w_q, b_q), linear(k, w_k, b_k), linear(v, w_v, b_v)
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\torch\nn\functional.py", line 1848, in linear
+    return torch._C._nn.linear(input, weight, bias)
+RuntimeError: [enforce fail at ..\c10\core\CPUAllocator.cpp:76] data. DefaultCPUAllocator: not enough memory: you tried to allocate 309600000 bytes.
+Result for DEFAULT_407be_00002:(pid=20852)
+  {}
+   Traceback (most recent call last):
+
+(pid=20852)   File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\tune\function_runner.py", line 248, in run
+2022-01-16 18:25:36,046 WARNING util.py:151 -- The `process_trial` operation took 78.131 s, which may be a performance bottleneck.
+(pid=20852)2022-01-16 18:25:36,107      WARNING trial_runner.py:420 -- Trial Runner checkpointing failed: [WinError 183] Cannot create a file when that file already exists: 'C:\\Users\\terng\\ray_results\\train_self_supervised\\.tmp_generator' -> 'C:\\Users\\terng\\ray_results\\train_self_supervised\\basic-variant-state-2022-01-16_18-23-03.json'
+== Status ==ntrypoint()
+Memory usage on this node: 11.3/15.9 GiB
+Using AsyncHyperBand: num_stopped=0
+Bracket: Iter 32.000: None | Iter 16.000: None | Iter 8.000: None | Iter 4.000: None | Iter 2.000: None | Iter 1.000: None
+Resources requested: 2/12 CPUs, 0/1 GPUs, 0.0/0.98 GiB heap, 0.0/0.34 GiB objects
+Result logdir: C:\Users\terng\ray_results\train_self_supervised
+Number of trials: 3/3 (2 ERROR, 1 RUNNING)
++---------------------+----------+-------+--------------+-----------+
+| Trial name          | status   | loc   |   batch_size |   n_epoch |
+|---------------------+----------+-------+--------------+-----------|
+| DEFAULT_407be_00000 | RUNNING  |       |         1000 |        50 |
+| DEFAULT_407be_00001 | ERROR    |       |          200 |        50 |
+| DEFAULT_407be_00002 | ERROR    |       |         5000 |        10 |
++---------------------+----------+-------+--------------+-----------+
+Number of errored trials: 2
++---------------------+--------------+---------------------------------------------------------------------------------------------------------------------------------+
+| Trial name          |   # failures | error file                                                                                                                      |
+|---------------------+--------------+---------------------------------------------------------------------------------------------------------------------------------|
+| DEFAULT_407be_00001 |            1 | C:\Users\terng\ray_results\train_self_supervised\DEFAULT_407be_00001_1_batch_size=200,n_epoch=50_2022-01-16_18-23-06\error.txt  |
+| DEFAULT_407be_00002 |            1 | C:\Users\terng\ray_results\train_self_supervised\DEFAULT_407be_00002_2_batch_size=5000,n_epoch=10_2022-01-16_18-23-08\error.txt |
++---------------------+--------------+---------------------------------------------------------------------------------------------------------------------------------+
+
+
+(pid=20852)   File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\tune\function_runner.py", line 315, in entrypoint
+(pid=20852)     return self._trainable_func(self.config, self._status_reporter,
+2022-01-16 18:25:36,228 WARNING ray_trial_executor.py:589 -- Over the last 60 seconds, the Tune event loop has been backlogged processing new results. Consider increasing your period of result reporting to improve performance.
+(pid=20852)2022-01-16 18:25:36,231      ERROR trial_runner.py:616 -- Trial DEFAULT_407be_00000: Error processing event.
+Traceback (most recent call last):
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\tune\trial_runner.py", line 586, in _process_trial
+    results = self.trial_executor.fetch_result(trial)
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\tune\ray_trial_executor.py", line 609, in fetch_result
+    result = ray.get(trial_future[0], timeout=DEFAULT_GET_TIMEOUT)
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\_private\client_mode_hook.py", line 47, in wrapper
+    return func(*args, **kwargs)
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\worker.py", line 1456, in get
+    raise value.as_instanceof_cause()
+ray::ImplicitFunc.train_buffered()ror):    File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\tune\function_runner.py", line 576, in _trainable_func
+ (pid=20852, ip=192.168.1.6)
+  File "python\ray\_raylet.pyx", line 480, in ray._raylet.execute_task
+  File "python\ray\_raylet.pyx", line 432, in ray._raylet.execute_task.function_executor
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\function_manager.py", line 556, in actor_method_executor
+    return method(__ray_actor, *args, **kwargs)
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\tune\trainable.py", line 167, in train_buffered
+    result = self.train()
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\tune\trainable.py", line 226, in train
+    result = self.step()
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\tune\function_runner.py", line 366, in step
+    self._report_thread_runner_error(block=True)
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\tune\function_runner.py", line 512, in _report_thread_runner_error
+    raise TuneError(
+ray.tune.error.TuneError: Trial raised an exception. Traceback:
+ray::ImplicitFunc.train_buffered()(pid=20852) (pid=20852, ip=192.168.1.6)
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\tune\function_runner.py", line 248, in run
+    self._entrypoint()
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\tune\function_runner.py", line 315, in entrypoint
+    return self._trainable_func(self.config, self._status_reporter,
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\tune\function_runner.py", line 576, in _trainable_func
+    output = fn()
+  File "train_self_supervised.py", line 287, in run_model
+    sliding_window_evaluation(tgn,
+  File "C:\Users\terng\OneDrive\Documents\Working\tgn\evaluation\evaluation.py", line 599, in sliding_window_evaluation
+    pos_prob, neg_prob = tgn.compute_edge_probabilities(sources_batch, destinations_batch,
+  File "C:\Users\terng\OneDrive\Documents\Working\tgn\model\tgn.py", line 264, in compute_edge_probabilities
+    source_node_embedding, destination_node_embedding, negative_node_embedding = self.compute_temporal_embeddings(source_nodes, destination_nodes, negative_nodes, edge_times, edge_idxs, n_neighbors=n_neighbors)
+  File "C:\Users\terng\OneDrive\Documents\Working\tgn\model\tgn.py", line 172, in compute_temporal_embeddings
+    node_embedding = self.embedding_module.compute_embedding(memory=memory,
+  File "C:\Users\terng\OneDrive\Documents\Working\tgn\modules\embedding_module.py", line 133, in compute_embedding
+    source_embedding = self.aggregate(n_layers, source_node_features,
+  File "C:\Users\terng\OneDrive\Documents\Working\tgn\modules\embedding_module.py", line 214, in aggregate
+    source_embedding, _ = attention_model(source_node_features,
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\torch\nn\modules\module.py", line 1102, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "C:\Users\terng\OneDrive\Documents\Working\tgn\model\temporal_attention.py", line 70, in forward
+    attn_output, attn_output_weights = self.multi_head_target(query=query, key=key, value=key,
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\torch\nn\modules\module.py", line 1102, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\torch\nn\modules\activation.py", line 992, in forward
+    attn_output, attn_output_weights = F.multi_head_attention_forward(
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\torch\nn\functional.py", line 5103, in multi_head_attention_forward
+    attn_output = linear(attn_output, out_proj_weight, out_proj_bias)
+  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\torch\nn\functional.py", line 1848, in linear
+    return torch._C._nn.linear(input, weight, bias)
+RuntimeError: [enforce fail at ..\c10\core\CPUAllocator.cpp:76] data. DefaultCPUAllocator: not enough memory: you tried to allocate 37152000 bytes.
+Result for DEFAULT_407be_00000:     output = fn()
+
+  {}
+
+(pid=20852)   File "train_self_supervised.py", line 287, in run_model
+2022-01-16 18:25:36,340 WARNING tune.py:429 -- Trial Runner checkpointing failed: [WinError 183] Cannot create a file when that file already exists: 'C:\\Users\\terng\\ray_results\\train_self_supervised\\.tmp_generator' -> 'C:\\Users\\terng\\ray_results\\train_self_supervised\\basic-variant-state-2022-01-16_18-23-03.json'
+(pid=20852)== Status ==
+Memory usage on this node: 11.3/15.9 GiB
+Using AsyncHyperBand: num_stopped=0
+Bracket: Iter 32.000: None | Iter 16.000: None | Iter 8.000: None | Iter 4.000: None | Iter 2.000: None | Iter 1.000: None
+Resources requested: 0/12 CPUs, 0/1 GPUs, 0.0/0.98 GiB heap, 0.0/0.34 GiB objects
+Result logdir: C:\Users\terng\ray_results\train_self_supervised
+Number of trials: 3/3 (3 ERROR)
++---------------------+----------+-------+--------------+-----------+
+| Trial name          | status   | loc   |   batch_size |   n_epoch |
+|---------------------+----------+-------+--------------+-----------|
+| DEFAULT_407be_00000 | ERROR    |       |         1000 |        50 |
+| DEFAULT_407be_00001 | ERROR    |       |          200 |        50 |
+| DEFAULT_407be_00002 | ERROR    |       |         5000 |        10 |
++---------------------+----------+-------+--------------+-----------+
+Number of errored trials: 3
++---------------------+--------------+---------------------------------------------------------------------------------------------------------------------------------+
+| Trial name          |   # failures | error file                                                                                                                      |
+|---------------------+--------------+---------------------------------------------------------------------------------------------------------------------------------|
+| DEFAULT_407be_00000 |            1 | C:\Users\terng\ray_results\train_self_supervised\DEFAULT_407be_00000_0_batch_size=1000,n_epoch=50_2022-01-16_18-23-04\error.txt |
+| DEFAULT_407be_00001 |            1 | C:\Users\terng\ray_results\train_self_supervised\DEFAULT_407be_00001_1_batch_size=200,n_epoch=50_2022-01-16_18-23-06\error.txt  |
+| DEFAULT_407be_00002 |            1 | C:\Users\terng\ray_results\train_self_supervised\DEFAULT_407be_00002_2_batch_size=5000,n_epoch=10_2022-01-16_18-23-08\error.txt |
++---------------------+--------------+---------------------------------------------------------------------------------------------------------------------------------+
+     sliding_window_evaluation(tgn,
+
+(pid=20852)   File "C:\Users\terng\OneDrive\Documents\Working\tgn\evaluation\evaluation.py", line 599, in sliding_window_evaluation
+Traceback (most recent call last): = tgn.compute_edge_probabilities(sources_batch, destinations_batch,
+  File "train_self_supervised.py", line 448, in <module>
+
+(pid=20852)    run_tuning()   File "C:\Users\terng\OneDrive\Documents\Working\tgn\model\tgn.py", line 264, in compute_edge_probabilities
+
+  File "train_self_supervised.py", line 366, in run_tuning
+(pid=20852)     source_node_embedding, destination_node_embedding, negative_node_embedding = self.compute_temporal_embeddings(source_nodes, destination_nodes, negative_nodes, edge_times, edge_idxs, n_neighbors=n_neighbors)
+    result = tune.run(
+(pid=20852)  File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\tune\tune.py", line 444, in run
+    raise TuneError("Trials did not complete", incomplete_trials)py", line 172, in compute_temporal_embeddings
+
+TuneErrorerror(pid=20852).     node_embedding = self.embedding_module.compute_embedding(memory=memory,
+: ('Trials did not complete', [DEFAULT_407be_00000, DEFAULT_407be_00001, DEFAULT_407be_00002])(pid=20852)
+   File "C:\Users\terng\OneDrive\Documents\Working\tgn\modules\embedding_module.py", line 133, in compute_embedding
+(pid=20852)     source_embedding = self.aggregate(n_layers, source_node_features,
+(pid=20852)   File "C:\Users\terng\OneDrive\Documents\Working\tgn\modules\embedding_module.py", line 214, in aggregate
+(pid=20852)     source_embedding, _ = attention_model(source_node_features,
+(pid=20852)   File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\torch\nn\modules\module.py", line 1102, in _call_impl
+(pid=20852)     return forward_call(*input, **kwargs)
+(pid=20852)   File "C:\Users\terng\OneDrive\Documents\Working\tgn\model\temporal_attention.py", line 70, in forward
+(pid=20852)     attn_output, attn_output_weights = self.multi_head_target(query=query, key=key, value=key,
+(pid=20852)   File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\torch\nn\modules\module.py", line 1102, in _call_impl
+(pid=20852)     return forward_call(*input, **kwargs)
+(pid=20852)   File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\torch\nn\modules\activation.py", line 992, in forward
+(pid=20852)     attn_output, attn_output_weights = F.multi_head_attention_forward(
+(pid=20852)   File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\torch\nn\functional.py", line 5103, in multi_head_attention_forward
+(pid=20852)     attn_output = linear(attn_output, out_proj_weight, out_proj_bias)
+(pid=20852)   File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\torch\nn\functional.py", line 1848, in linear
+(pid=20852)     return torch._C._nn.linear(input, weight, bias)
+(pid=20852) RuntimeError: [enforce fail at ..\c10\core\CPUAllocator.cpp:76] data. DefaultCPUAllocator: not enough memory: you tried to allocate 37152000 bytes.
+(pid=20852) Exception in thread Thread-2:
+(pid=20852) Traceback (most recent call last):
+(pid=20852)   File "C:\Users\terng\anaconda3\envs\py38\lib\threading.py", line 932, in _bootstrap_inner
+(pid=20852)     self.run()
+(pid=20852)   File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\tune\function_runner.py", line 267, in run
+(pid=20852)     raise e
+(pid=20852)   File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\tune\function_runner.py", line 248, in run
+(pid=20852)     self._entrypoint()
+(pid=20852)   File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\tune\function_runner.py", line 315, in entrypoint
+(pid=20852)     return self._trainable_func(self.config, self._status_reporter,
+(pid=20852)   File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\ray\tune\function_runner.py", line 576, in _trainable_func
+(pid=20852)     output = fn()
+(pid=20852)   File "train_self_supervised.py", line 287, in run_model
+(pid=20852)     sliding_window_evaluation(tgn,
+(pid=20852)   File "C:\Users\terng\OneDrive\Documents\Working\tgn\evaluation\evaluation.py", line 599, in sliding_window_evaluation
+(pid=20852)     pos_prob, neg_prob = tgn.compute_edge_probabilities(sources_batch, destinations_batch,
+(pid=20852)   File "C:\Users\terng\OneDrive\Documents\Working\tgn\model\tgn.py", line 264, in compute_edge_probabilities
+(pid=20852)     source_node_embedding, destination_node_embedding, negative_node_embedding = self.compute_temporal_embeddings(source_nodes, destination_nodes, negative_nodes, edge_times, edge_idxs, n_neighbors=n_neighbors)
+(pid=20852)   File "C:\Users\terng\OneDrive\Documents\Working\tgn\model\tgn.py", line 172, in compute_temporal_embeddings
+(pid=20852)     node_embedding = self.embedding_module.compute_embedding(memory=memory,
+(pid=20852)   File "C:\Users\terng\OneDrive\Documents\Working\tgn\modules\embedding_module.py", line 133, in compute_embedding
+(pid=20852)     source_embedding = self.aggregate(n_layers, source_node_features,
+(pid=20852)   File "C:\Users\terng\OneDrive\Documents\Working\tgn\modules\embedding_module.py", line 214, in aggregate
+(pid=20852)     source_embedding, _ = attention_model(source_node_features,
+(pid=20852)   File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\torch\nn\modules\module.py", line 1102, in _call_impl
+(pid=20852)     return forward_call(*input, **kwargs)
+(pid=20852)   File "C:\Users\terng\OneDrive\Documents\Working\tgn\model\temporal_attention.py", line 70, in forward
+(pid=20852)     attn_output, attn_output_weights = self.multi_head_target(query=query, key=key, value=key,
+(pid=20852)   File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\torch\nn\modules\module.py", line 1102, in _call_impl
+(pid=20852)     return forward_call(*input, **kwargs)
+(pid=20852)   File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\torch\nn\modules\activation.py", line 992, in forward
+(pid=20852)     attn_output, attn_output_weights = F.multi_head_attention_forward(
+(pid=20852)   File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\torch\nn\functional.py", line 5103, in multi_head_attention_forward
+(pid=20852)     attn_output = linear(attn_output, out_proj_weight, out_proj_bias)
+(pid=20852)   File "C:\Users\terng\anaconda3\envs\py38\lib\site-packages\torch\nn\functional.py", line 1848, in linear
+(pid=20852)     return torch._C._nn.linear(input, weight, bias)
+(pid=20852) RuntimeError: [enforce fail at ..\c10\core\CPUAllocator.cpp:76] data. DefaultCPUAllocator: not enough memory: you tried to allocate 37152000 bytes.
+#+END_SRC
+
+2. =ray-tune= hangs when I run  =python train_self_supervised.py -d reddit_10000 --use_memory --run_tuning= (or its equivalent) on either anaconda cmd or window terminal.
+
+** Research Log 2: error occurs when I run ray-tune remotely on HPC
+*** Background (information and description of goal)
+- note
+  - Why are you doing this? What is the movitation?
+  - What is your expectation of the results?
+
+I encounter multiple types of error depend on situation
+
+1. =ray-tune= error when I run =~/.conda/envs/py38/bin/python3 train_self_supervised.py -d reddit_10000 --use_memory --run_tuning=. On the same session, =ray-tune= also hanged
+
+   #+BEGIN_SRC md
+Failure # 1 (occurred at 2022-01-16_20-42-55)
+Traceback (most recent call last):
+  File "/mnt/beegfs/home/awannaphasch2016/.conda/envs/py38/lib/python3.8/site-packages/ray/tune/trial_runner.py", line 924, in _process_trial
+    results = self.trial_executor.fetch_result(trial)
+  File "/mnt/beegfs/home/awannaphasch2016/.conda/envs/py38/lib/python3.8/site-packages/ray/tune/ray_trial_executor.py", line 787, in fetch_result
+    result = ray.get(trial_future[0], timeout=DEFAULT_GET_TIMEOUT)
+  File "/mnt/beegfs/home/awannaphasch2016/.conda/envs/py38/lib/python3.8/site-packages/ray/_private/client_mode_hook.py", line 105, in wrapper
+    return func(*args, **kwargs)
+  File "/mnt/beegfs/home/awannaphasch2016/.conda/envs/py38/lib/python3.8/site-packages/ray/worker.py", line 1715, in get
+    raise value
+ray.exceptions.RayActorError: The actor died unexpectedly before finishing this task.
+   #+END_SRC
+* Research Date: [2022-01-17 Mon]
+- ref
+  - https://roamresearch.com/#/app/AdaptiveGraphStucture/page/pfT6XbX8F
+** Research Log 1:  Do increase epoch impact performance?
+*** Background (information and description of goal)
+- note
+  - Why are you doing this? What is the movitation?
+  - What is your expectation of the results?
+
+- note
+  - batch size is fixed to 1000
+  - epoch = 5, 20, 50 are tried
+
+- model with epoch is 3
+  its log is =1642432356.5350947=
+- model with epoch is 5
+  its log is =1642429720.4641814= and =1642416734.1726859=
+- model with =epoch= is 20
+  its log is =1642421136.658543=
+- model with =epoch= is 50
+  its log is =1642416998.4788427=
+
+*** Data and Observations
+- note
+  - Does the logbook present the data and observations adequately?
+  - How did you performed validation step as proof of correctness of your work?
+  - Are graphs appropriately labeled and legible?
+
+*_0 model uses =epoch= of 50
+*_1 model uses =epoch= of 20
+*_2 model uses =epoch= of 5
+*_3 model uses =epoch= of 3
+
+From result below, one can conlude that the more epoch (at least to 50) model is train on, the model will be perform that much better.
+
+comparing performance per window basis.
+x-axis = window idx
+#+attr_latex: :width 500px
+[[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1642416998-4788427_1642421136-658543_1642416734-1726859_1642432356-5350947_min_length=T_use_time_as_x=F.png][file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1642416998-4788427_1642421136-658543_1642416734-1726859_1642432356-5350947_min_length=T_use_time_as_x=F.png]]
+
+
+compare performance based on time taken to run.
+x-axis = time in seconds
+#+attr_latex: :width 500px
+[[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1642416998-4788427_1642421136-658543_1642416734-1726859_1642432356-5350947_min_length=F_use_time_as_x=T.png][file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1642416998-4788427_1642421136-658543_1642416734-1726859_1642432356-5350947_min_length=F_use_time_as_x=T.png]]
+
+
+** Research Log 2: Do increase batch size impact performance?
+*** Background (information and description of goal)
+- note
+  - Why are you doing this? What is the movitation?
+  - What is your expectation of the results?
+
+- note
+  - epoch is fixed to 5
+  - batch size is 200, 1000, 2000,
+
+- model with =batch_size= = 200
+ its log is =1640243549.1885495=
+- model with =batch_size= = 1000
+ its log is =1642429720.4641814= and =1642416734.1726859=
+- model with =batch_size= = 2000
+ its log is =1642416474.9904623=
+
+*** Data and Observations
+- note
+  - Does the logbook present the data and observations adequately?
+  - How did you performed validation step as proof of correctness of your work?
+  - Are graphs appropriately labeled and legible?
+
+note: model with small batch size has higher maximum number of windows
+
+
+From performance shown below, maximum performance of model that use smaller =batch_size= are still higher.
+
+One the other hand, we can summarized that larger =batch_size= lead to better performance when compare performance window-wise.
+When comparing performance base on time, model with smaller =batch_size= takes less time to reach the same performance miltstone compared to model with bigger =batch_size=.
+
+
+*_0 model uses =batch_size= of 200
+*_1 model uses =batch_size= of 1000
+*_2 model uses =batch_size= of 2000
+
+comparing performance per window basis.
+#+attr_latex: :width 500px
+[[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1640243549-1885495_1642416734-1726859_1642416474-9904623_min_length=T.png][file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1640243549-1885495_1642416734-1726859_1642416474-9904623_min_length=T.png]]
+
+comparing overall performance (given the same number of data instances)
+x-axis = window-idx
+#+name: 1640243549-1885495_1642416734-1726859_1642416474-9904623
+#+attr_latex: :width 500px
+[[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1640243549-1885495_1642416734-1726859_1642416474-9904623_min_length=F.png][file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1640243549-1885495_1642416734-1726859_1642416474-9904623_min_length=F.png]]
+
+
+compare performance based on time taken to run.
+x-axis = time in seconds
+#+attr_latex: :width 500px
+[[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1640243549-1885495_1642416734-1726859_1642416474-9904623_min_length=F_use_time_as_x=T.png][file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1640243549-1885495_1642416734-1726859_1642416474-9904623_min_length=F_use_time_as_x=T.png]]
+
+*** Future Direction
+
+I want to note here that this experiments visulization (shown below) are not fair to compare model with different =window_size=. (Currently window size depends on =batch_size= e.g. =window_size= is a multiple of =batch_size=) This is because sliding window evaluation train on previous windows (which depends on =window_size=) to previous next window (which also depends on =window_size=)
+
+To fairely compare performance of model with different =batch_size=. Models must test its performance on the same period of dataset.
+
+* Research Date: [2022-01-19 Wed]
+- ref
+  - https://roamresearch.com/#/app/AdaptiveGraphStucture/page/pfT6XbX8F
+** Research Log 1: Is there correlation between ef_iwf value and performance?
+*** Background (information and description of goal)
+- note
+  - Why are you doing this? What is the movitation?
+  - What is your expectation of the results?
+
+experiments with the following ef_iwf value (I will be using =batch_size= of 1000 from now on.)
+- model with ef_iwf * 1
+  its log name is =1642599016.4373028=
+- model with ef_iwf * 50
+  its log name is =1642598633.3073912=
+- model with ef_iwf * 500
+  its log name is =1642599792.0887227=
+- model with ef_iwf * 0.1
+  its log name is =1642600251.3233526=
+
+*** Data and Observations
+- note
+  - Does the logbook present the data and observations adequately?
+  - How did you performed validation step as proof of correctness of your work?
+  - Are graphs appropriately labeled and legible?
+
+*_0 is model with ef_iwf * 1
+*_1 is model with ef_iwf * 50
+*_2 is model with ef_iwf * 500
+*_3 is model with ef_iwf * 0.1
+
+From result shown below, we can conclude that increase weight multiplier that are more than 1 worsen result performance.
+Notice that multipling weight by 0.1 and 1 are argubly the same.
+
+comparing performance per window basis.
+#+attr_latex: :width 500px
+[[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1642599016-4373028_1642598633-3073912_1642599792-0887227_1642600251-3233526_min_length=F_use_time_as_x=F.png][file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1642599016-4373028_1642598633-3073912_1642599792-0887227_1642600251-3233526_min_length=F_use_time_as_x=F.png]]
+
+* Research Date: [2022-01-21 Fri]
+- ref
+  - https://roamresearch.com/#/app/AdaptiveGraphStucture/page/pfT6XbX8F
+** Research Log 1: Experiment with models using inverse ef-iwf.
+*** Background (information and description of goal)
+- note
+  - Why are you doing this? What is the movitation?
+  - What is your expectation of the results?
+
+parameters configs are as followed
+- epoch = 5
+- batch_size = 1000
+
+experiments with the following ef_iwf value (I will be using =batch_size= of 1000 from now on.)
+- model with =1/ef_iwf= * 1
+  its log name is =1642763194.1611047=
+- model with =1/ef_iwf= * 50
+  its log name is =1642763750.673035=
+- model with =1/ef_iwf= * 500
+  its log name is =1642764868.0464556=
+- model with =1/ef_iwf= * 0.1
+  its log name is =1642766439.4182317=
+
+*** Data and Observations
+- note
+  - Does the logbook present the data and observations adequately?
+  - How did you performed validation step as proof of correctness of your work?
+  - Are graphs appropriately labeled and legible?
+
+increase multiplier worsen performance.
+
+comparing performance per window basis.
+#+attr_latex: :width 500px
+[[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1642763194-1611047_1642763750-673035_1642764868-0464556_1642766439-4182317_min_length=F_use_time_as_x=F_test_performance_on_the_same_period=False.png][file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1642763194-1611047_1642763750-673035_1642764868-0464556_1642766439-4182317_min_length=F_use_time_as_x=F_test_performance_on_the_same_period=False.png]]
+
+
+** Research Log 2: Comparing ef-iwf and inverse_ef-iwf
+*** Data and Observations
+- note
+  - Does the logbook present the data and observations adequately?
+  - How did you performed validation step as proof of correctness of your work?
+  - Are graphs appropriately labeled and legible?
+
+There are no differences in performance bewteen ef-iwf and inverse ef-iwf (1/ef-iwf)
+comparing performance per window basis.
+#+attr_latex: :width 500px
+[[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1642599016-4373028_1642763194-1611047_min_length=F_use_time_as_x=F_test_performance_on_the_same_period=False.png][file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1642599016-4373028_1642763194-1611047_min_length=F_use_time_as_x=F_test_performance_on_the_same_period=False.png]]
+
+* Research Date: [2022-01-25 Tue]
+- ref
+  - https://roamresearch.com/#/app/AdaptiveGraphStucture/page/pfT6XbX8F
+** Research Log 1: model's performance from first 10000 of wikipedia, lastfmt, and mooc.
+*** Background (information and description of goal)
+- note
+  - Why are you doing this? What is the movitation?
+  - What is your expectation of the results?
+
+the model is ensemble.
+- performance of model running with reddit_10000.
+  - ws_multipler = 1, batch_size = 1000 + epoch = 5
+    - =1643215872.0304363=
+- performance of model running with wikipedia_10000.
+  - ws_multipler = 1, batch_size = 1000
+    - =1643208638.9181495=
+  - ws_multipler = 2, batch_size = 1000
+    - =1643206992.5413334=
+- performance of model running with lastfm_10000.
+  - ws_multipler = 1, batch_size = 1000
+    - =1643208229.8289232=
+  - ws_multipler = 2, batch_size = 1000
+    - =1643206948.596401=
+- performance of model running with mooc_10000.
+  - ws_multipler = 1, batch_size = 1000
+    - =1643208291.8184156=
+  - ws_multipler = 2, batch_size = 1000
+    - =1643206889.537408=
+
+the model is original.
+- performance of model running with reddit_10000.
+  - ws_multipler = 1, batch_size = 1000
+  - ws_multipler = 2, batch_size = 1000
+    - =1643207223.7450905=
+- performance of model running with wikipedia_10000.
+  - ws_multipler = 1, batch_size = 1000
+    - =1643207628.7793047=
+  - ws_multipler = 2, batch_size = 1000
+    - =1643207434.030141=
+- performance of model running with lastfm_10000.
+  - ws_multipler = 1, batch_size = 1000
+    - =1643208084.6326253=
+- performance of model running with mooc_10000.
+  - ws_multipler = 1, batch_size = 1000
+    - =1643207872.3252301=
+
+
+the model is ef_iwf + ef_weight_multiplier = 0.1
+- performance of model running with wikipedia_10000.
+  - ws_multipler = 1, batch_size = 1000 + epoch = 5
+    - =1643217258.1899276=
+- performance of model running with lastfm_10000.
+  - ws_multipler = 1, batch_size = 1000 + epoch = 5
+    - =1643218319.3176053=
+- performance of model running with mooc_10000.
+  - ws_multipler = 1, batch_size = 1000 + epoch = 5
+    - ==
+
+the model is ef_iwf + ef_weight_multiplier = 50
+- performance of model running with wikipedia_10000.
+  - ws_multipler = 1, batch_size = 1000 + epoch = 5
+    - =1643219008.001874=
+- performance of model running with lastfm_10000.
+  - ws_multipler = 1, batch_size = 1000 + epoch = 5
+    - =1643219150.1010776=
+- performance of model running with mooc_10000.
+  - ws_multipler = 1, batch_size = 1000 + epoch = 5
+    - ==
+
+the model is ef_iwf + ef_weight_multiplier = 500
+- performance of model running with wikipedia_10000.
+  - ws_multipler = 1, batch_size = 1000 + epoch = 5
+    - =1643219259.943284=
+- performance of model running with lastfm_10000.
+  - ws_multipler = 1, batch_size = 1000 + epoch = 5
+    - =1643219395.201941=
+- performance of model running with mooc_10000.
+  - ws_multipler = 1, batch_size = 1000 + epoch = 5
+    - ==
+
+** Research Log 2: Comparing ensemble performance as number of epoch varies.
+*** Background (information and description of goal)
+- note
+  - Why are you doing this? What is the movitation?
+  - What is your expectation of the results?
+
+model's log ==
+config
+- reddit_1000
+- bs = 1000
+- ws_multiplier = 1
+- n_epoch = 1000
+- ws_frameworkf = forward
+
+model's log =1643210480.2940898=
+config
+- reddit_1000
+- bs = 1000
+- ws_multiplier = 1
+- n_epoch = 100
+
+#+caption: final performance (performance of the last epoch) of voting ensemble of log name =1643210480.2940898=
+#+BEGIN_SRC sh
+tail -n 2 /mnt/c/Users/terng/OneDrive/Documents/Working/tgn/log/1643210480.2940898.log
+#+END_SRC
+
+#+RESULTS:
+| 2022-01-26 10:38:42 | 841 - first_logger - INFO - precision of enemble = 0.8285004142502072 |
+| 2022-01-26 10:38:42 | 841 - first_logger - INFO - auc of enemble = 0.9990760000000001       |
+
+model's log =1643208424.0300257=
+config
+- reddit_1000
+- bs = 1000
+- ws_multiplier = 1
+- n_epoch = 5
+
+#+caption: final performance (performance of the last epoch) of voting ensemble of log name =1643208424.0300257=.
+#+BEGIN_SRC sh
+tail -n 2 /mnt/c/Users/terng/OneDrive/Documents/Working/tgn/log/1643208424.0300257.log
+#+END_SRC
+
+#+RESULTS:
+| 2022-01-26 09:47:49 | 712 - first_logger - INFO - precision of enemble = 0.8732394366197183 |
+| 2022-01-26 09:47:49 | 713 - first_logger - INFO - auc of enemble = 0.989776                 |
+
+NOTE:
+- for all the result of link-prediction that I have presented up until this point, I have notice that value of precision (ap) and auc are switched. I purposefully log ensemble to follow this rule. So to summarize, from above result, auc value is meant to be for precision value and vice versa.
+  - I will report result based on what we see on the txt and illutrastion.
+
+
+From ensemble results, we can see that auc voting ensemble of performance of the last epoch is considerably higher than individual runs. On the other hand, using epoch = 5, precision score of voting ensemble is also better than its individual models, but, using epoch = 100, precision score of voting ensemble is worse than its individual models.
+
+Comparing performance window-wise as window slide forward, using ensemble with higher epoch, individual models consistently perform better.
+
+According to Fig2, one can see that performance of individual model with bigger training data tend to be lower. This give me the clue that each model shouldn't be train with the same epoch size.
+
+Below is plot showing performance epoch-wise of all windows. From the Fig5, one can see that performance hasn't platea at 100th epoch.
+
+Using epoch 100, performance of individual model converge very quickly while, using epoch 5, performance of individual model doesn't show to converge.
+
+
+#+caption: Fig1: Using n_epoch = 100, display final voting ensemble as window slides forward.
+=I haven't logged performance of voting ensemble as window slide forward. I just logged the final voting=
+
+#+caption: Fig2: Using n_epoch = 100, display all individual models as window slides forward.
+#+attr_latex: :width 500px
+[[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1643210480.2940898_all_models.PNG][file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1643210480.2940898_all_models.PNG]]
+
+#+caption: Fig3: Using n_epoch = 5, display final voting ensemble as window slides forward.
+#+attr_latex: :width 500px
+=I haven't logged performance of voting ensemble as window slide forward. I just logged the final voting=
+
+#+caption: Fig4: Usi
+ng n_epoch = 5, display all individual models as window slides forward.
+#+attr_latex: :width 500px
+[[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1643208424.0300257_all_individual_model_in_ensemble.png]]
+
+
+*** Thought
+- note
+  - Record your thought at the time that you perform the experiments.
+  - Are you drawing conclusion from your data?
+  - Given what you have done and learned today, what should you do next and which ideas or concepts can be extended in the current and potention future researches?
+
+Ensemble baseline should be to have models with the exact same config as ensemble.
+
+** Research Log 3: =SKIP= Does other dataset responds to ef_iwf in the same way? (using multiplication of 0.1, 50, 500)?
+*** Background (information and description of goal)
+- note
+  - Why are you doing this? What is the movitation?
+  - What is your expectation of the results?
+
+If all dataset response to ef_iwf weight multiplier in the same way as reddit where multiplier < 1 (no differences.) and the more multiplier (given that multiplier > 1) the worse model perform.
+
+
+** Research Log 4: =SKIP= conduct experiment to show that giving weight to edges that happen more frequence should improve performance.
+*** Background (information and description of goal)
+- note
+  - Why are you doing this? What is the movitation?
+  - What is your expectation of the results?
+
+currently weight like =ef_iwf= and =nf_iwf= are computed per batch using information upuntil the current batch.
+
+To show that giving weight to edges that happen more frequence should improve performance, I can compute =ef_iwf= and =nf_iwf= upuntil the latest batch of the last sliding window.
+
+* Research Date: [2022-01-28 Fri]
+- ref
+  - https://roamresearch.com/#/app/AdaptiveGraphStucture/page/pfT6XbX8F
+
+** Research Log 1: experiments with time decay weight multiplier and ef_iwf.
+*** Background (information and description of goal)
+- note
+  - Why are you doing this? What is the movitation?
+  - What is your expectation of the results?
+
+- decay rate = 0.1 + time decay is based on seconds count
+
+    model's log is =1643423454.470684= (run 1 time)  and =1643427785.9194715= (run 10 times)
+    config
+    - reddit_1000
+    - bs = 1000
+    - ws_multiplier = 1
+    - n_epoch = 5
+    - ef_iwf_weight flag is set
+    - decay rate = 0.1
+
+    model's log is =1643630158.2283676= (run 1 time)
+    config
+    - reddit_1000
+    - bs = 1000
+    - ws_multiplier = 1
+    - n_epoch = 5
+    - use_time_decay_multiplier flag is set
+    - decay rate = 0.1
+
+    model's log is =1643631082.8712153= (run 1 time)
+    config
+    - reddit_1000
+    - bs = 1000
+    - ws_multiplier = 1
+    - n_epoch = 5
+    - ef_weight flag is set
+    - decay rate = 0.1
+
+    model's log is ==
+    config
+    - reddit_1000
+    - bs = 1000
+    - ws_multiplier = 1
+    - n_epoch = 5
+    # - ef_weight flag is set
+    - ef_iwf_weight_from_source_and_destination flag is set
+    - decay rate = 0.1
+
+- decay rate = 0.1 + time decay is base on day count
+    model's log is =1643638551.9833746=
+    config
+    - reddit_1000
+    - bs = 1000
+    - ws_multiplier = 1
+    - n_epoch = 5
+    - ef_iwf_weight flag is set
+    - decay rate = 0.1
+
+    model's log is ==
+    config
+    - reddit_1000
+    - bs = 1000
+    - ws_multiplier = 1
+    - n_epoch = 5
+    - use_time_decay_multiplier flag is set
+    - decay rate = 0.1
+
+    model's log is ==
+    config
+    - reddit_1000
+    - bs = 1000
+    - ws_multiplier = 1
+    - n_epoch = 5
+    - ef_weight flag is set
+    - decay rate = 0.1
+
+    model's log is ==
+    config
+    - reddit_1000
+    - bs = 1000
+    - ws_multiplier = 1
+    - n_epoch = 5
+    # - ef_weight flag is set
+    - ef_iwf_weight_from_source_and_destination flag is set
+    - decay rate = 0.1
+
+model's log is =1643631552.957832= (run 1 time)
+config
+- reddit_1000
+- bs = 1000
+- ws_multiplier = 1
+- n_epoch = 5
+- ef_weight flag is set
+
+
+*_0 = original
+*_1 = original + ef_iwf
+*_2 = original + ef_iwf + time_delay
+
+#+attr_latex: :width 500px
+[[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/1642416734-1726859_1642599016-4373028_1643427785-9194715__F_F.png][file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/1642416734-1726859_1642599016-4373028_1643427785-9194715__F_F.png]]
+
+
+** Research Log 2: get mininum number of epoch that overfit of a model on each window as window slide forward
+*** Background (information and description of goal)
+- note
+  - Why are you doing this? What is the movitation?
+  - What is your expectation of the results?
+
+model's log =1643281621.6927505=
+config
+- reddit_1000
+- bs = 1000
+- ws_multiplier = 1
+- n_epoch = 1000
+- ws_frameworkf = forward
+** Research Log 3: experiment with ef_iwf but include both sources and destination.
+*** Background (information and description of goal)
+   - note
+     - Why are you doing this? What is the movitation?
+     - What is your expectation of the results?
+
+    so far ef_iwf only use source to compute, I can include desination by simply compute the value of ef_iwf of destination and multiple both valeu together to get final edges weight.
+
+    we expect that this may not work because as we have shown on [[*Research Log 1: Is there correlation between ef_iwf value and performance?][this log]] on 2022-01-19 Wed, see quote below.
+    #+BEGIN_QUOTE
+    From result shown below, we can conclude that increase weight multiplier that are more than 1 worsen result performance.
+Notice that multipling weight by 0.1 and 1 are argubly the same.
+    #+END_QUOTE
+
+    Addition to simply multiply ef_iwf computed from source and ef_iwf computed from destination, I can add non-linear layer (tihs non-linear layer should also takes time as input as well.) to learn weighting between sources and destination nodes. 
+
+    model's log is ==
+    config
+    - reddit_1000
+    - bs = 1000
+    - ws_multiplier = 1
+    - n_epoch = 5
+    - ef_iwf_weight_from_source_and_destination flag is set
+    - decay rate = 1
+      
+    model's log is ==
+    config
+    - reddit_1000
+    - bs = 1000
+    - ws_multiplier = 1
+    - n_epoch = 5
+    - ef_iwf_weight_from_source_and_destination flag is set
+    - decay rate = 0.1
+
+* Research Date: [2022-02-03 Thu]
+- ref
+  - https://roamresearch.com/#/app/AdaptiveGraphStucture/page/pfT6XbX8F
+** Research Log 1: experiment with link prediction with nf_iwf.
+** Research Log 2: experiment with link prediction with nf.
+** Research Log 3: experiment with sliding window with keep_last_n_windows as parmaeters.
+*** Background (information and description of goal)
+- note
+  - Why are you doing this? What is the movitation?
+  - What is your expectation of the results?
+
+model's log =1643449846.000784=
+config
+- reddit_1000
+- bs = 1000
+- ws_multiplier = 1
+- n_epoch = 5
+- keep all windows
+
+model's log =1643849250.0097542=
+config
+- reddit_1000
+- bs = 1000
+- ws_multiplier = 1
+- n_epoch = 5
+- keep last 1 window
+
+model's log =1643849250.0097542=
+config
+- reddit_1000
+- bs = 1000
+- ws_multiplier = 1
+- n_epoch = 5
+- keep last 2 window
+
+model's log =1643849250.0097542=
+config
+- reddit_1000
+- bs = 1000
+- ws_multiplier = 1
+- n_epoch = 5
+- keep last 3 window
+*** Background (information and description of goal)
+- note
+  - Why are you doing this? What is the movitation?
+  - What is your expectation of the results?
+
+See, email summarization [[https://mail.google.com/mail/u/0/#inbox/QgrcJHrnvDwGwPrzxJmHJVsLJPjHnSrLwtQ][here]].
+
+* Research Date: [2022-02-04 Fri]
+- ref
+  - https://roamresearch.com/#/app/AdaptiveGraphStucture/page/pfT6XbX8F
+** Research Log 1: How varying n_epoch effects performance model with either time_decay or ef_iwf_weight
+
+** Research Log 2: Comparing time_decay vs nf_iwf vs ef_iwf vs nf vs ef and their combination.
+*** Data and Observations
+- note
+  - Does the logbook present the data and observations adequately?
+  - How did you performed validation step as proof of correctness of your work?
+  - Are graphs appropriately labeled and legible?
+Note: that this is all just one run. (I need to do at least 5 run to confirm this results), but there is no need because all of them is worse than benchmark.
+
+original > ef = time_decay > ef_iwf = (ef + time_decay) = (ef_iwf + time_decay) > nf_iwf = nf (sources) = nf (destination) = (nf + time_decay) > (nf_iwf + time_decay)
+
+** Research Log 3: find n_epoch that overfit the training
+*** Data and Observations
+- note
+  - Does the logbook present the data and observations adequately?
+  - How did you performed validation step as proof of correctness of your work?
+  - Are graphs appropriately labeled and legible?
+
+running the following command indicates that, for any windows, using 500 epoch is not enough to overfit the model.
+#+BEGIN_SRC sh :noeval
+python train_self_supervised.py -d reddit_10000 --use_memory --n_runs 1 --n_epoch 5 --bs 1000  --ws_framework forward --custom_prefix tmp --ws_multiplier 1 --keep_last_n_window_as_window_slides 3 --window_stride_multiplier 1 --use_nf_iwf_weight
+#+END_SRC
+
+#+BEGIN_SRC python :noeval
+
+#!/usr/bin/env python3
+from utils.crawler import Crawler
+import pandas as pd
+from pathlib import Path
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+class ValueCollection():
+  def __init__(self):
+    self.dfs = []
+
+  def append_value(self, df):
+
+    self.dfs.append(df)
+
+class LinkPredictionCrawler_1(Crawler):
+  def __init__(self, log_file, suffix=''):
+    base_path = Path('/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/')
+    self.log_path = str(base_path / f'log/nodes_and_edges_weight/{log_file}/performance_observer.pickle')
+    # self.crawl_data_v2(nodes_and_edges_weight_log_path)
+
+  def crawl_data(self):
+    self.df = pd.read_pickle(self.log_path)
+
+def draw(df, x, y, hue):
+    sns.boxplot(x=x, y=y, data=df, hue="Metrics")
+    plt.yscale('log')
+    plt.show()
+
+# draw_multiple()
+
+vc =  ValueCollection()
+
+# python train_self_supervised.py -d reddit_10000 --use_memory --n_runs 1 --n_epoch 5 --bs 1000  --ws_framework forward --custom_prefix tmp --ws_multiplier 1 --keep_last_n_window_as_window_slides 3 --window_stride_multiplier 1 --use_nf_iwf_weight
+log_file = '1644012732.606389'
+c70 = LinkPredictionCrawler_1(log_file)
+c70.crawl_data()
+c70.df['Name'] = log_file
+vc.append_value(c70.df)
+
+# df = pd.concat( [c54.df, c55.df, c56.df, c57.df])
+df = pd.concat(vc.dfs)
+df = pd.melt(df.reset_index(), id_vars=['index', 'ws_idx', 'batch_idx', 'epoch_idx', 'Name', 'Mean Loss'], value_vars=['AUC','Absolute Precision'], var_name='Metrics', value_name='Metrics Values')
+# sns.relplot(x='batch_idx', y='Metrics Values', data=df, col="Metrics", kind='line', hue='Name')
+# sns.relplot(x='batch_idx', y='Mean Loss', data=df, col="Metrics", kind='line', hue='Name')
+sns.relplot(x='index', y='Mean Loss', data=df[df['batch_idx'] == 6], col="Metrics", kind='line', hue='Name')
+plt.yscale('log')
+plt.show()
+
+#+END_SRC
+
+running 500 epoch
+#+BEGIN_SRC sh :noeval
+python train_self_supervised.py -d reddit_10000 --use_memory --n_runs 1 --n_epoch 500 --bs 1000  --ws_framework forward --custom_prefix tmp --ws_multiplier 1 --keep_last_n_window_as_window_slides 1 --window_stride_multiplier 1
+#+END_SRC
+
+*** Data and Observations
+- note
+  - Does the logbook present the data and observations adequately?
+  - How did you performed validation step as proof of correctness of your work?
+  - Are graphs appropriately labeled and legible?
+
+#+BEGIN_SRC python :noeval
+#!/usr/bin/env python3
+from utils.crawler import Crawler
+import pandas as pd
+from pathlib import Path
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+
+class ValueCollection():
+  def __init__(self):
+    self.dfs = []
+
+  def append_value(self, df):
+
+    self.dfs.append(df)
+
+class LinkPredictionCrawler_1(Crawler):
+  def __init__(self, log_file, suffix=''):
+    base_path = Path('/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/')
+    self.log_path = str(base_path / f'log/nodes_and_edges_weight/{log_file}/performance_observer.pickle')
+    # self.crawl_data_v2(nodes_and_edges_weight_log_path)
+
+  def crawl_data(self):
+    self.df = pd.read_pickle(self.log_path)
+
+def draw(df, x, y, hue):
+    sns.boxplot(x=x, y=y, data=df, hue="Metrics")
+    plt.yscale('log')
+    plt.show()
+
+# draw_multiple()
+
+vc =  ValueCollection()
+
+# # python train_self_supervised.py -d reddit_10000 --use_memory --n_runs 1 --n_epoch 5 --bs 1000  --ws_framework forward --custom_prefix tmp --ws_multiplier 1 --keep_last_n_window_as_window_slides 3 --window_stride_multiplier 1 --use_nf_iwf_weight
+# log_file = '1644012732.606389'
+# c73 = LinkPredictionCrawler_1(log_file)
+# c73.crawl_data()
+# c73.df['Name'] = log_file
+# vc.append_value(c73.df)
+
+# # python train_self_supervised.py -d reddit_10000 --use_memory --n_runs 1 --n_epoch 10000 --bs 1000  --ws_framework forward --custom_prefix tmp --ws_multiplier 1 --keep_last_n_window_as_window_slides 1 --window_stride_multiplier 1
+# log_file = '1644034660.7790797'
+# c74 = LinkPredictionCrawler_1(log_file)
+# c74.crawl_data()
+# c74.df['Name'] = log_file
+# vc.append_value(c74.df)
+
+# # python train_self_supervised.py -d reddit_10000 --use_memory --n_runs 1 --n_epoch 50 --bs 1000  --ws_framework forward --custom_prefix tmp --ws_multiplier 1 --keep_last_n_window_as_window_slides 1 --window_stride_multiplier 1
+# # log_file = '1643944198.2235723' # 1 run
+# log_file = '1643950077.9129927'
+# c59 = LinkPredictionCrawler_1(log_file)
+# c59.crawl_data()
+# c59.df['Name'] = log_file
+# vc.append_value(c59.df)
+
+# python train_self_supervised.py -d reddit_10000 --use_memory --n_runs 1 --n_epoch 500 --bs 1000  --ws_framework forward --custom_prefix tmp --ws_multiplier 1 --keep_last_n_window_as_window_slides 1 --window_stride_multiplier 1
+log_file = '1644083686.5323043'
+c74 = LinkPredictionCrawler_1(log_file)
+c74.crawl_data()
+c74.df['Name'] = log_file
+vc.append_value(c74.df)
+
+df = pd.concat(vc.dfs)
+df.reset_index(inplace=True)
+# df = pd.melt(df, id_vars=['index', 'ws_idx', 'batch_idx', 'epoch_idx', 'Name', 'Mean Loss'], value_vars=['AUC','Absolute Precision'], var_name='Metrics', value_name='Metrics Values')
+df = pd.melt(df, id_vars=['index', 'ws_idx', 'batch_idx', 'epoch_idx', 'Name', 'Mean Loss'], value_vars=['AUC','Absolute Precision'], var_name='Metrics', value_name='Metrics Values')
+
+
+# # sns.relplot(x='batch_idx', y='Metrics Values', data=df, col="Metrics", kind='line', hue='Name')
+# # sns.relplot(x='batch_idx', y='Mean Loss', data=df, col="Metrics", kind='line', hue='Name')
+# sns.relplot(x='epoch_idx', y='Mean Loss', data=df[df['batch_idx'] == 0], col="Metrics", kind='line', hue='Name')
+# plt.yscale('log')
+# plt.show()
+
+
+# sns.relplot(x='epoch_idx', y='Metrics Values', data=df[ np.logical_and(df['batch_idx'] == 0, df['epoch_idx'] < 500) ], col="Metrics",kind='line')
+# sns.relplot(x='epoch_idx', y='Metrics Values', data=df[df['epoch_idx'] < 1000], hue='batch_idx', col="Metrics",kind='line')
+sns.relplot(x='epoch_idx', y='Metrics Values', data=df[df['epoch_idx'] < 1000], hue='batch_idx', col="Metrics",kind='line')
+# sns.relplot(x='epoch_idx', y='Mean Loss', data=df[df['epoch_idx'] < 1000], hue='batch_idx',kind='line')
+plt.yscale('log')
+plt.show()
+#+END_SRC
+
+#+attr_latex: :width 500px
+[[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/img/overfitting_model.png][file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/img/overfitting_model.png]]
+
+* Research Date: [2022-02-10 Thu]
+- ref
+  - https://roamresearch.com/#/app/AdaptiveGraphStucture/page/pfT6XbX8F
+** Research Log 1: Weighted Ensemble Strategy ( including Grid Search)
+*** Background (information and description of goal)
+- note
+  - Why are you doing this? What is the movitation?
+  - What is your expectation of the results?
+
+
+According to [[https://machinelearningmastery.com/weighted-average-ensemble-for-deep-learning-neural-networks/][How to Develop a Weighted Average Ensemble for Deep Learning Neural Networks]]
+
+In the case of predicting a class probability, the prediction can be calculated as the argmax of the summed probabilities for each class label.
+
+A simple alternative to adding more weight to a given model without calculating explicit weight coefficients is to add a given model more than once to the ensemble.
+
+Unless the holdout validation dataset is large and representative, a weighted ensemble has an opportunity to overfit as compared to a simple averaging ensemble.
+
+Although less flexible, it allows a given well-performing model to contribute more than once to a given prediction made by the ensemble
+
+*** Data and Observations
+- note
+  - Does the logbook present the data and observations adequately?
+  - How did you performed validation step as proof of correctness of your work?
+  - Are graphs appropriately labeled and legible?
+
+Code below will be using reddit dataset on link prediction tasks
+
+benchmark model. log =1642416734.1726859=
+config
+- bs = 1000
+- ws_multiplier = 1000
+- n_epoch = 5
+
+#+BEGIN_SRC sh
+tail -n 3 /mnt/c/Users/terng/OneDrive/Documents/Working/tgn/log/1642416734.1726859.log
+#+END_SRC
+
+#+RESULTS:
+| 2022-01-17 05:56:19 | 313 - first_logger - INFO - val auc: 0.9222286224966487         |
+| 2022-01-17 05:56:19 | 317 - first_logger - INFO - val ap: 0.914863                      |
+
+
+ensemble log =1644514533.8118901=
+config
+- bs = 1000
+- ws_multiplier = 1000
+- n_epoch = 5
+- Ensemble weighting mechanism = None
+
+#+BEGIN_SRC sh
+tail -n 2 /mnt/c/Users/terng/OneDrive/Documents/Working/tgn/log/1644514533.8118901.log
+#+END_SRC
+
+#+RESULTS:
+| 2022-02-10 12:37:08 | 835 - first_logger - INFO - precision of enemble = 0.7962962962962963 |
+| 2022-02-10 12:37:08 | 836 - first_logger - INFO - auc of enemble = 0.897795                 |
+
+ensemble model. log =1644831517.2036114=
+config
+- bs = 1000
+- ws_multiplier = 1000
+- n_epoch = 5
+- paramter searching = grid search
+
+#+RESULTS:
+Optimized Weights: [0.         0.         0.         0.         0.         0.16666667
+ 0.33333333 0.16666667 0.33333333]
+pc: 0.806
+auc: 0.909
+cm: [[925  75]
+ [222 778]]
+
+ensemble model. log =1644831517.2036114=
+config
+- bs = 1000
+- ws_multiplier = 1000
+- n_epoch = 5
+- Ensemble weighting mechanism = differnetial_evolution (100 runs)
+
+#+BEGIN_SRC python :results raw
+#!/usr/bin/env python3
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+from ast import literal_eval
+from numpy import tensordot
+from sklearn.datasets import make_blobs
+from sklearn.metrics import accuracy_score
+from keras.utils import to_categorical
+from keras.models import Sequential
+from keras.layers import Dense
+from matplotlib import pyplot
+from numpy import mean
+from numpy import std
+from numpy import array
+from numpy import argmax
+from numpy import tensordot
+from numpy.linalg import norm
+from itertools import product
+from evaluation.evaluation import compute_precision, compute_auc_for_ensemble
+from sklearn.metrics import average_precision_score, roc_auc_score, confusion_matrix
+from scipy.optimize import differential_evolution
+import torch
+
+# log_file = '1644827051.476394'
+log_file = '1644831517.2036114'
+# log_file = '1644834351.7516458'
+path =f"/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/log/ensembles/{log_file}/ensemble_prediction_results.pickle"
+df = pd.read_pickle(path)
+
+# path = 'data/ml_reddit_10000.csv'
+# df1 = pd.read_csv(path)['label'].astype(int)[5000:]
+
+def normalize(weights):
+	# calculate l1 vector norm
+	result = norm(weights, 1)
+	# check for a vector of all zeros
+	if result == 0.0:
+		return weights
+	# return normalized vector (unit norm)
+	return weights / result
+
+def evaluate_ensemble(pred, weights, testy):
+    summed = tensordot(pred, weights, axes=((0), (0)))
+    f = lambda x: 1 if x > 0.5 else 0
+    results = [f(i) for i in summed]
+
+    cm = confusion_matrix(testy, results)
+    return compute_precision(cm), compute_auc_for_ensemble(testy, summed), cm
+    # return accuracy_score(testy.to_numpy(),results)
+
+
+def grid_search(pred, testy):
+	# define weights to consider
+	w = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+
+	bound_w = [(0.0, 1.0)  for _ in range(n_members)]
+	best_score, best_weights = 0.0, None
+	# iterate all possible combinations (cartesian product)
+	# for weights in product(w, repeat=len(pred)):
+	tmp = len(list(product(w, repeat=len(pred))))
+	# for ii, weights in enumerate(product(w, repeat=len(pred))):
+	for ii, weights in enumerate(product(w, repeat=len(pred))):
+		# print(f"{ii}/{tmp}")
+		# skip if all weights are equal
+		if len(set(weights)) == 1:
+			continue
+		# hack, normalize weight vector
+		weights = normalize(weights)
+		# evaluate weights
+		auc_score, pc_score, cm = evaluate_ensemble(pred, weights, testy)
+		if pc_score > best_score:
+			best_score, best_weights = pc_score, weights
+			print('pc: >%s %f' % (best_weights, auc_score))
+			print('auc: >%s %f' % (best_weights, pc_score))
+			print(f'cm: {cm}')
+	return list(best_weights)
+
+def loss_function(weights, pred, testy):
+	weights = normalize(weights)
+	pred = tensordot(pred, weights, axes=((0), (0)))
+	loss = torch.nn.BCELoss()(torch.tensor(pred), torch.tensor(testy))
+	return loss
+
+# grid_search(np.array([i for i in df['raw_pred_val'].to_numpy()]),
+#             df['true_label'].to_numpy()[0])
+
+bound_w = [(0.0, 1.0)  for _ in range(df['raw_pred_val'].shape[0])]
+search_arg = (np.array([i for i in df['raw_pred_val'].to_numpy()]), df['true_label'].to_numpy()[0])
+result = differential_evolution(loss_function, bound_w, search_arg, maxiter=100, tol=1e-7)
+weights = normalize(result['x'])
+print('Optimized Weights: %s' % weights)
+# evaluate chosen weights
+auc_score, pc_score, cm = evaluate_ensemble(weights, np.array([i for i in df['raw_pred_val'].to_numpy()]), df['true_label'].to_numpy()[0])
+print('Optimized Weights pc: %f' % auc_score)
+print('Optimized Weights auc: %f' % pc_score)
+print(cm)
+#+END_SRC
+
+#+RESULTS:
+Optimized Weights: [0.         0.         0.         0.         0.0501496  0.21495675
+ 0.28723546 0.179695   0.26796319]
+Optimized Weights pc: 0.807692
+Optimized Weights auc: 0.908650
+[[945  55]
+ [225 775]]
+
+
+bench mark log =1640243549-1885495=
+note: runs is taken from [[ref:1640243549-1885495_1642416734-1726859_1642416474-9904623]]
+config
+- bs = 200
+- ws_multiplier = 1
+- n_epoch = 5
+
+#+BEGIN_SRC sh
+tail -n 2 /mnt/c/Users/terng/OneDrive/Documents/Working/tgn/log/1640243549.1885495.log
+#+END_SRC
+
+#+RESULTS:
+| 2021-12-23 05:02:03 | 371 - root - INFO - val auc: 0.936784130147847 |
+| 2021-12-23 05:02:03 | 371 - root - INFO - val ap: 0.9294249999999998 |
+
+
+ensemble log =1644834351.7516458=
+config
+- bs = 200
+- ws_multiplier = 1000
+- n_epoch = 5
+- Ensemble weighting mechanism = None
+
+
+#+BEGIN_SRC sh
+tail -n 2 /mnt/c/Users/terng/OneDrive/Documents/Working/tgn/log/1644834351.7516458.log
+#+END_SRC
+
+#+RESULTS:
+|                     |                                                                       |
+| 2022-02-14 09:33:14 | 939 - first_logger - INFO - precision of enemble = 0.8583690987124464 |
+| 2022-02-14 09:33:14 | 956 - first_logger - INFO - auc of enemble = 0.945975                 |
+
+ensemble log =1644834351.7516458=
+config
+- bs = 200
+- ws_multiplier = 1000
+- n_epoch = 5
+- Ensemble weighting mechanism = grid_search
+
+#+RESULTS:
+fail to run because run out of memory.
+
+ensemble log =1644834351.7516458=
+config
+- bs = 200
+- ws_multiplier = 1000
+- n_epoch = 5
+- Ensemble weighting mechanism  = differnetial_evolution (100 runs)
+
+#+BEGIN_SRC python
+#!/usr/bin/env python3
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+from ast import literal_eval
+from numpy import tensordot
+from sklearn.datasets import make_blobs
+from sklearn.metrics import accuracy_score
+from keras.utils import to_categorical
+from keras.models import Sequential
+from keras.layers import Dense
+from matplotlib import pyplot
+from numpy import mean
+from numpy import std
+from numpy import array
+from numpy import argmax
+from numpy import tensordot
+from numpy.linalg import norm
+from itertools import product
+from evaluation.evaluation import compute_precision, compute_auc_for_ensemble
+from sklearn.metrics import average_precision_score, roc_auc_score, confusion_matrix
+from scipy.optimize import differential_evolution
+import torch
+
+# log_file = '1644827051.476394'
+# log_file = '1644831517.2036114'
+log_file = '1644834351.7516458'
+path =f"/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/log/ensembles/{log_file}/ensemble_prediction_results.pickle"
+df = pd.read_pickle(path)
+
+# path = 'data/ml_reddit_10000.csv'
+# df1 = pd.read_csv(path)['label'].astype(int)[5000:]
+
+def normalize(weights):
+	# calculate l1 vector norm
+	result = norm(weights, 1)
+	# check for a vector of all zeros
+	if result == 0.0:
+		return weights
+	# return normalized vector (unit norm)
+	return weights / result
+
+def evaluate_ensemble(pred, weights, testy):
+    summed = tensordot(pred, weights, axes=((0), (0)))
+    f = lambda x: 1 if x > 0.5 else 0
+    results = [f(i) for i in summed]
+
+    cm = confusion_matrix(testy, results)
+    return compute_precision(cm), compute_auc_for_ensemble(testy, summed), cm
+    # return accuracy_score(testy.to_numpy(),results)
+
+
+def grid_search(pred, testy):
+	# define weights to consider
+	w = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+
+	bound_w = [(0.0, 1.0)  for _ in range(n_members)]
+	best_score, best_weights = 0.0, None
+	# iterate all possible combinations (cartesian product)
+	# for weights in product(w, repeat=len(pred)):
+	tmp = len(list(product(w, repeat=len(pred))))
+	# for ii, weights in enumerate(product(w, repeat=len(pred))):
+	for ii, weights in enumerate(product(w, repeat=len(pred))):
+		# print(f"{ii}/{tmp}")
+		# skip if all weights are equal
+		if len(set(weights)) == 1:
+			continue
+		# hack, normalize weight vector
+		weights = normalize(weights)
+		# evaluate weights
+		auc_score, pc_score, cm = evaluate_ensemble(pred, weights, testy)
+		if pc_score > best_score:
+			best_score, best_weights = pc_score, weights
+			print('pc: >%s %f' % (best_weights, auc_score))
+			print('auc: >%s %f' % (best_weights, pc_score))
+			print(f'cm: {cm}')
+	return list(best_weights)
+
+def loss_function(weights, pred, testy):
+	weights = normalize(weights)
+	pred = tensordot(pred, weights, axes=((0), (0)))
+	loss = torch.nn.BCELoss()(torch.tensor(pred), torch.tensor(testy))
+	return loss
+
+# grid_search(np.array([i for i in df['raw_pred_val'].to_numpy()]),
+#             df['true_label'].to_numpy()[0])
+
+bound_w = [(0.0, 1.0)  for _ in range(df['raw_pred_val'].shape[0])]
+search_arg = (np.array([i for i in df['raw_pred_val'].to_numpy()]), df['true_label'].to_numpy()[0])
+result = differential_evolution(loss_function, bound_w, search_arg, maxiter=100, tol=1e-7)
+weights = normalize(result['x'])
+print('Optimized Weights: %s' % weights)
+# evaluate chosen weights
+auc_score, pc_score, cm = evaluate_ensemble(weights, np.array([i for i in df['raw_pred_val'].to_numpy()]), df['true_label'].to_numpy()[0])
+print('Optimized Weights pc: %f' % auc_score)
+print('Optimized Weights auc: %f' % pc_score)
+print(cm)
+#+END_SRC
+
+#+RESULTS:
+Optimized Weights: [0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.14054408 0.         0.         0.0822243  0.
+ 0.07730725 0.         0.00207462 0.         0.         0.
+ 0.         0.19007867 0.         0.02150465 0.         0.
+ 0.         0.04792727 0.         0.         0.         0.
+ 0.         0.         0.2603266  0.         0.         0.01509523
+ 0.16291733]
+Optimized Weights pc: 0.862832
+Optimized Weights auc: 0.953650
+[[195   5]
+ [ 31 169]]
+
 *** Data and Observations
 - note
   - Does the logbook present the data and observations adequately?
@@ -8516,16 +10081,92 @@ I use tune the following parameters
   - Are graphs appropriately labeled and legible?
 
 
-Comparing =1640243549.1885495= (original model) to =1641588473.0998917= (model where =weighted_loss_method= is =share_selected_random_weight_per_window=)
-#+attr_latex: :width 500px
-[[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1640243549.1885495_vs_1641588473.0998917.png][file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1640243549.1885495_vs_1641588473.0998917.png]]
-
-** Research Log 1: run model where =weighted_loss_method= is =random_as_pos_edges_weight=
+Using 1000 batch, with only 9 models, ensemble performance cannot beat the best line, but when narrow batch to 200 instances, ensemble outperformanc baseline model
+* Research Date: [2022-02-16 Wed]
+- ref
+  - https://roamresearch.com/#/app/AdaptiveGraphStucture/page/pfT6XbX8F
+** Research Log 1: Explaining how ensemble's code is implemented.
+*** Background (information and description of goal)
+- note
+  - Why are you doing this? What is the movitation?
+  - What is your expectation of the results?
+* Research Date: [2022-02-24 Thu]
+- ref
+  - https://roamresearch.com/#/app/AdaptiveGraphStucture/page/pfT6XbX8F
+** Research Log 1: Comparing ensembles models that is evaluated via sliding window models.
 *** Background (information and description of goal)
 - note
   - Why are you doing this? What is the movitation?
   - What is your expectation of the results?
 
-Comparing =1640243549.1885495= (original model) to =1641597198.5721123= (model where =weighted_loss_method= is =share_selected_random_weight_per_window=)
-#+attr_latex: :width 500px
-[[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1640243549.1885495_vs_1641597198.5721123.png][file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1640243549.1885495_vs_1641597198.5721123.png]]
+I schedule the following command to be run via sbatch in fau koko hpc.
+running models on reddit 100000 instances.
+I increase bs to 1000 to run on 100k instance. number of models is fixed to 5.
+#+BEGIN_SRC sh
+/mnt/beegfs/home/awannaphasch2016/.conda/envs/py38/bin/python3 train_self_supervised.py -d reddit_100000 --use_memory --n_runs 1 --n_epoch 5 --bs 1000  --ws_framework ensemble --custom_prefix tmp --ws_multiplier 1 --init_n_instances_as_multiple_of_ws 5 --fix_begin_data_ind_of_models_in_ensemble
+/mnt/beegfs/home/awannaphasch2016/.conda/envs/py38/bin/python3 train_self_supervised.py -d reddit_100000 --use_memory --n_runs 1 --n_epoch 5 --bs 1000  --ws_framework ensemble --custom_prefix tmp --ws_multiplier 1 --init_n_instances_as_multiple_of_ws 5
+#+END_SRC
+
+Running models on reddit 10000 instances.
+I increase n_epoch from 5 to 50 to see if performance increase accordingly. number of models is fixed to 5.
+#+BEGIN_SRC sh
+/mnt/beegfs/home/awannaphasch2016/.conda/envs/py38/bin/python3 train_self_supervised.py -d reddit_10000 --use_memory --n_runs 1 --n_epoch 50 --bs 200  --ws_framework ensemble --custom_prefix tmp --ws_multiplier 1 --init_n_instances_as_multiple_of_ws 5
+/mnt/beegfs/home/awannaphasch2016/.conda/envs/py38/bin/python3 train_self_supervised.py -d reddit_10000 --use_memory --n_runs 1 --n_epoch 50 --bs 200  --ws_framework ensemble --custom_prefix tmp --ws_multiplier 1 --init_n_instances_as_multiple_of_ws 5 --fix_begin_data_ind_of_models_in_ensemble
+#+END_SRC
+
+After finished running I move files from remote to local using the following command.
+#+BEGIN_SRC sh
+scp awannaphasch2016@koko-login.hpc.fau.edu:~/Documents/Working/tgn/log/nodes_and_edges_weight/1645686262.971807/performance_observer.pickle log/nodes_and_edges_weight/1645686262.971807
+scp awannaphasch2016@koko-login.hpc.fau.edu:~/Documents/Working/tgn/log/nodes_and_edges_weight/1645689302.0818634/performance_observer.pickle log/nodes_and_edges_weight/1645689302.0818634
+scp awannaphasch2016@koko-login.hpc.fau.edu:~/Documents/Working/tgn/log/nodes_and_edges_weight/1645691761.0638666/performance_observer.pickle log/nodes_and_edges_weight/1645691761.0638666
+scp awannaphasch2016@koko-login.hpc.fau.edu:~/Documents/Working/tgn/log/nodes_and_edges_weight/1645692348.8669064/performance_observer.pickle log/nodes_and_edges_weight/1645692348.8669064
+
+scp awannaphasch2016@koko-login.hpc.fau.edu:~/Documents/Working/tgn/log/nodes_and_edges_weight/1645725664.4413369/performance_observer.pickle log/nodes_and_edges_weight/1645725664.4413369
+scp awannaphasch2016@koko-login.hpc.fau.edu:~/Documents/Working/tgn/log/nodes_and_edges_weight/1645728678.546848/performance_observer.pickle log/nodes_and_edges_weight/1645728678.546848
+scp awannaphasch2016@koko-login.hpc.fau.edu:~/Documents/Working/tgn/log/nodes_and_edges_weight/1645727763.8540914/performance_observer.pickle log/nodes_and_edges_weight/1645727763.8540914
+scp awannaphasch2016@koko-login.hpc.fau.edu:~/Documents/Working/tgn/log/nodes_and_edges_weight/1645729693.158312/performance_observer.pickle log/nodes_and_edges_weight/1645729693.158312
+#+END_SRC
+
+Then, I run the models with the following script file =/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/scripts/retrieve_data_from_link_prediction_3.py=.
+**** Benchmark models to beat
+***** 10k instances
+****** bs = 200, epoch = 5
+bench mark log =1640243549-1885495=
+note: runs is taken from [[ref:1640243549-1885495_1642416734-1726859_1642416474-9904623]]
+config
+- bs = 200
+- ws_multiplier = 1
+- n_epoch = 5
+
+#+BEGIN_SRC sh
+tail -n 2 /mnt/c/Users/terng/OneDrive/Documents/Working/tgn/log/1640243549.1885495.log
+#+END_SRC
+
+#+RESULTS:
+| 2021-12-23 05:02:03 | 371 - root - INFO - val auc: 0.936784130147847 |
+| 2021-12-23 05:02:03 | 371 - root - INFO - val ap: 0.9294249999999998 |
+                      |                                                |
+**** Does increase epoch improve performance?
+see email title =weekly progress report 2/21/2022 - 2/24/2022= for report
+benchmark of models with window size of 200 given 10k instance is
+**** Does 10 models performance better? by how much?
+**** Does increase batch_size from 200 to 1000. (given the same model.)
+* Research Date: [2022-02-28 Mon]
+- ref
+  - https://roamresearch.com/#/app/AdaptiveGraphStucture/page/pfT6XbX8F
+** Research Log 1: Comparing keep_last_n_window_as_window_slides models
+*** Background (information and description of goal)
+- note
+  - Why are you doing this? What is the movitation?
+  - What is your expectation of the results?
+
+keep_last_n_window_as_window_slides=1
+1646069539.055583.log
+keep_last_n_window_as_window_slides=2
+1646069660.8246248.log
+keep_last_n_window_as_window_slides=3
+1646070010.5761147.log
+keep_last_n_window_as_window_slides=4
+1646070784.4226665.log
+keep_last_n_window_as_window_slides=5
+1646070906.892667.log
