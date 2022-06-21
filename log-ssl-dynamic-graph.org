@@ -136,6 +136,9 @@ AssertionError: Something wrong in how the memory was updated
 #+END_SRC
 ** Error Log 2: EarlyStopping is incorrectly implemented for ~sliding_window_evaluation~
 *** Background (information and description of goal)
+:PROPERTIES:
+:ID:       2bc0b31a-abe8-41dd-8700-783b7f0bd694
+:END:
 - note
   - Why are you doing this? What is the movitation?
   - What is your expectation of the results?
@@ -4626,6 +4629,9 @@ Default Parameters configuration are as followed.
 #+END_SRC
 
 *** Data and Observations
+:PROPERTIES:
+:ID:       4bf88921-adaa-432f-8362-db144812fbd7
+:END:
 - note
   - Does the logbook present the data and observations adequately?
   - How did you performed validation step as proof of correctness of your work?
@@ -9232,7 +9238,7 @@ the model is ef_iwf + ef_weight_multiplier = 500
   - ws_multipler = 1, batch_size = 1000 + epoch = 5
     - ==
 
-** Research Log 2: Comparing ensemble performance as number of epoch varies.
+** TODO Research Log 2: Comparing ensemble performance as number of epoch varies.
 *** Background (information and description of goal)
 - note
   - Why are you doing this? What is the movitation?
@@ -9309,7 +9315,6 @@ Using epoch 100, performance of individual model converge very quickly while, us
 ng n_epoch = 5, display all individual models as window slides forward.
 #+attr_latex: :width 500px
 [[file:/mnt/c/Users/terng/OneDrive/Documents/Working/tgn/plot/1643208424.0300257_all_individual_model_in_ensemble.png]]
-
 
 *** Thought
 - note
@@ -9721,7 +9726,7 @@ plt.show()
 - ref
   - https://roamresearch.com/#/app/AdaptiveGraphStucture/page/pfT6XbX8F
 ** Research Log 1: Weighted Ensemble Strategy ( including Grid Search)
-*** Background (information and description of goal)
+*** TODO Background (information and description of goal)
 - note
   - Why are you doing this? What is the movitation?
   - What is your expectation of the results?
@@ -10086,7 +10091,7 @@ Using 1000 batch, with only 9 models, ensemble performance cannot beat the best 
 - ref
   - https://roamresearch.com/#/app/AdaptiveGraphStucture/page/pfT6XbX8F
 ** Research Log 1: Explaining how ensemble's code is implemented.
-*** Background (information and description of goal)
+*** TODO Background (information and description of goal)
 - note
   - Why are you doing this? What is the movitation?
   - What is your expectation of the results?
@@ -10146,11 +10151,11 @@ tail -n 2 /mnt/c/Users/terng/OneDrive/Documents/Working/tgn/log/1640243549.18854
 | 2021-12-23 05:02:03 | 371 - root - INFO - val auc: 0.936784130147847 |
 | 2021-12-23 05:02:03 | 371 - root - INFO - val ap: 0.9294249999999998 |
                       |                                                |
-**** Does increase epoch improve performance?
+**** TODO Does increase epoch improve performance?
 see email title =weekly progress report 2/21/2022 - 2/24/2022= for report
 benchmark of models with window size of 200 given 10k instance is
-**** Does 10 models performance better? by how much?
-**** Does increase batch_size from 200 to 1000. (given the same model.)
+**** TODO Does 10 models performance better? by how much?
+**** TODO Does increase batch_size from 200 to 1000. (given the same model.)
 * Research Date: [2022-02-28 Mon]
 - ref
   - https://roamresearch.com/#/app/AdaptiveGraphStucture/page/pfT6XbX8F
